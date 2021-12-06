@@ -1,0 +1,107 @@
+open MyStdLib
+open References
+open Lang
+
+(* parse random examples from json *)
+let parse_random_proj :
+    n:int ->
+    max_k:int ->
+    Problem.t ->
+    (unit ->
+    (Value.t * Value.t) list list list
+    * (Value.t * Value.t) list)
+    reference_projection =
+ fun ~n ~max_k problem ->
+  {
+    proj =
+      (fun {
+             function_name;
+             k_max;
+             d_in;
+             d_out;
+             p_in;
+             assertion;
+             func;
+             _;
+           } () ->
+        let i_e = problem.full_eval_context in
+        let io_expr_to_val (es, e) = 
+              let vs =
+                List.map
+                  ~f:(Eval.evaluate_with_holes ~eval_context:i_e)
+                  es
+              in
+              let v =
+                Eval.evaluate_with_holes
+                  ~eval_context:i_e
+                  e
+              in
+              (Value.mk_tuple vs,v) in
+        let assertion =
+          List.map assertion ~f:(fun (i, o) -> io_expr_to_val (d_in i, d_out o))
+        in
+        let json =
+          Yojson.Basic.from_file ((Sys.getenv "HOME")^"/sis-lambda/example_gen/" ^ function_name ^ ".json")
+        in
+        (List.map
+            (List.range ~stop:`inclusive 1 max_k)
+            ~f:(fun k ->
+              let open Yojson.Basic.Util in
+              (* k is size of example set *)
+              json |> member (Int.to_string k) |> to_list |> fun l ->
+              List.take l n
+              |> List.map ~f:(fun set ->
+                     set |> to_list
+                     |> List.map ~f:(fun io ->
+                            match to_list io with
+                            | [ i; o ] ->
+                                let input_val = p_in i in
+                                let output_val = func input_val in
+                                io_expr_to_val (d_in input_val, d_out output_val)
+                            | _        -> failwith "json not well-formated"))),
+          assertion ));
+  }
+
+(* let newline_regexp = *)
+(*   Str.regexp " *\n+ *" *)
+
+(* let left_paren_space_regexp = *)
+(*   Str.regexp "( " *)
+
+(* let space_right_paren_regexp = *)
+(*   Str.regexp " )" *)
+
+(* let space_comma_regexp = *)
+(*   Str.regexp " ," *)
+
+(* let clean_string : string -> string = *)
+(*   fun str -> *)
+(*     str *)
+(*       |> Str.global_replace newline_regexp " " *)
+(*       |> Str.global_replace left_paren_space_regexp "(" *)
+(*       |> Str.global_replace space_right_paren_regexp ")" *)
+(*       |> Str.global_replace space_comma_regexp "," *)
+
+(* let specification_proj : poly:bool -> string reference_projection = fun ~poly
+   -> let runner = if poly then Denotation.poly else Denotation.mono in { proj =
+   fun { function_name; k_max; d_in; d_out; input; base_case; poly_args ; func }
+   -> match Sample2.io_trial ~n:1 ~k:k_max func input base_case with | [ios] ->
+   let (arg_lens, inners) = ios |> List.map ( fun (input_val, output_val) -> let
+   args = match runner d_in input_val with | Lang.ECtor ("args", [], Lang.ETuple
+   args) -> args
+
+   | arg -> [arg] in ( List.length args , "(" ^ ( args @ [runner d_out
+   output_val] |> List.map (Pretty.exp >> clean_string) |> String.concat ", " )
+   ^ ")" ) ) |> List.split in let arg_len = match List.collapse_equal arg_lens
+   with (* Need to replace List2.collapse_equal*) | Some n -> n
+
+   | None -> failwith "Unequal arg lengths in specification_proj" in let
+   n_string = if Int.equal arg_len 1 then "" else string_of_int arg_len in let
+   first_line = if poly_args = [] then "specifyFunction" ^ n_string ^ " " ^
+   function_name else "specifyFunction" ^ n_string ^ " (" ^ function_name ^ " <"
+   ^ String.concat ", " (List.map Pretty.typ poly_args) ^ ">)"
+
+   in first_line ^ "\n [ " ^ String.concat "\n , " inners ^ "\n ]"
+
+   | _ -> failwith "Sample2.io_trial didn't return singleton in
+   specification_proj" } *)

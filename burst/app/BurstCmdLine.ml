@@ -2,6 +2,35 @@ open MyStdLib
 open Burst
 open Lang
 
+module Time = struct
+open Core
+include Time
+
+let timeout = 60
+
+exception Timeout
+
+let delayed_fun f =
+  let (_ : unit) =
+    Stdlib.Sys.set_signal Stdlib.Sys.sigalrm
+      (Stdlib.Sys.Signal_handle (fun _ -> raise Timeout))
+  in
+  ignore (Unix.alarm timeout : int);
+  try
+    let r = f () in
+    ignore (Unix.alarm 0 : int);
+    r
+  with e ->
+    ignore (Unix.alarm 0 : int);
+    raise e
+
+let timed f : 'a * float =
+  let start_time = now () in
+  let result = delayed_fun f in
+  let end_time = now () in
+  let time = Span.to_sec (Time.diff end_time start_time) in
+  (result, time)
+  end
 module A = SmythSynthesizer
 
 
@@ -143,7 +172,7 @@ let check_equivalence
   let p_unprocessed = Problem.update_all_import_bases p_unprocessed fname in
   let p_unprocessed = import_imports p_unprocessed in
   let problem = Problem.process p_unprocessed in
-  let context = Problem.extract_context problem in
+  let context : Context.t = Problem.extract_context problem in
   let ref_e =
     ParserContainer.exp
       (MyStdLib.SimpleFile.read_from_file ~fname:ce1)
@@ -346,6 +375,34 @@ let handle_inputs
         ~tc_synth
   end
 
+let benchmarks = [
+    "list_compress";
+    "list_concat";
+    "list_hd";
+    "list_last";
+    "list_length";
+    "list_rev_snoc";
+    "list_snoc";
+    "list_stutter";
+    "list_tl";
+    "list_append";
+    "list_even_parity";
+    "list_inc";
+    "list_map";
+    "list_nth";
+    "list_filter";
+    "list_sum";
+    "list_drop";
+    "list_take";
+    "list_pairwise_swap";
+    "list_sort_sorted_insert";
+    "list_sorted_insert";
+    "list_fold";
+    "list_rev_tailcall";
+    "list_rev_append";
+    "list_rev_fold";
+  ]
+
 open MyStdLib.Command.Let_syntax
 let param =
   MyStdLib.Command.basic ~summary:"..."
@@ -362,6 +419,9 @@ let param =
       and check_equiv2   = flag "check-equiv2" (optional string) ~doc:"check equivalence of two synthesized solutions"
       and tc_synth   = flag "tc-synth" no_arg ~doc:"use the FTA synthesizer with trace complete examples"
       and use_random   = flag "use-random" no_arg ~doc:"print timbuk to vata mapping"
+      and json_fuzz = flag "json-fuzz" no_arg ~doc:"use json as the source for sets IO examples to perform stress testing"
+      and trial_count = flag "trial-count" (required int) ~doc:"the number of trials for each k"
+      and max_k = flag "max-k" (required int) ~doc:"the maximum size of example sets"
       (*and no_grammar_output   = flag "no-grammar-output" no_arg ~doc:"do not output the discovered grammar"
         and log_progress   = flag "log-progress" no_arg ~doc:"output the progress log"
         and print_runtime_specs  = flag "print-runtime-specs" no_arg ~doc:"output the runtime specs"
@@ -373,19 +433,95 @@ let param =
       in
       let no_experiments = not no_experiments in
       fun () ->
-        handle_inputs
-          ~fname:input_spec
-          ~use_myth
-          ~use_smyth
-          ~use_simple
-          ~use_l2
-          ~log
-          ~print_times
-          ~no_experiments
-          ~tc_synth
-          ~check_equiv1
-          ~check_equiv2
-          ~use_random
+        if json_fuzz then
+            let checker (ctx: Context.t) ref_e inp outp =
+                let inpe = Lang.Value.to_exp inp in
+                let apped = Expr.mk_app ref_e inpe in
+                let evaled = Eval.evaluate_with_holes ~eval_context:ctx.evals apped in
+                Value.equal evaled outp
+            in
+            let is_consistent ctx ref_e ios =
+              List.for_all ios ~f:(fun (i, o) -> checker ctx ref_e i o)
+            in
+            let synth =
+                    let synth = get_predicate_synthesizer ~use_simple in
+                    (module Synthesizers.VerifiedPredicate.ToIOSynth(Synthesizers.VerifiedPredicate.Make(val synth)) : Synthesizers.IOSynth.S)
+            in
+            let module S = (val synth) in
+
+            List.iter benchmarks ~f:(fun builtin ->
+                Printf.printf "%s\n" builtin;
+                let p_unprocessed =
+                    ParserContainer.unprocessed_problem
+                    ((MyStdLib.SimpleFile.read_from_file ~fname:("benchmarks/io/"^builtin^".mls")))
+                in
+                let p_unprocessed = Problem.update_all_import_bases p_unprocessed builtin in
+                let p_unprocessed = import_imports p_unprocessed in
+                let problem = Problem.process p_unprocessed in
+                let context = Problem.extract_context problem in
+                let (tin,tout) = problem.synth_type in
+                let ((benchmark : (Value.t * Value.t) list list list),
+                        (assertion : (Value.t * Value.t) list) ) =
+                    match
+                    List.Assoc.find
+                        (References.all (Fuzz.parse_random_proj ~n:trial_count ~max_k problem))
+                        builtin ~equal:String.equal
+                    with
+                    | Some benchmark_thunk -> benchmark_thunk ()
+                    | None                 ->
+                        prerr_endline ("Unknown built-in function '" ^ builtin ^ "'.");
+                        exit 1
+                in
+                (* k = num_of_examples - 1*)
+                List.iteri benchmark ~f:(fun k trials ->
+                    let k = k + 1 in
+                    let log_file = "log/" ^ builtin ^ string_of_int k in
+                    let log_channel = Out_channel.create log_file in
+                    let result_k : (float option * bool) list =
+                        List.map trials ~f:(fun exs ->
+                            try
+                            let exp, time_spent =
+                              Time.timed (fun _ -> snd (S.synth (S.init ~problem ~context ~tin ~tout) exs))
+                            in
+                            Printf.fprintf log_channel "time_spent: %.4f\n" time_spent;
+                            ( Some time_spent,
+                                is_consistent context exp assertion
+                            )
+                            with Time.Timeout ->
+                            Printf.fprintf log_channel "time_spent: TIMEOUT\n";
+                            (None, false))
+                    in
+                    let total_time, timeout, success =
+                        List.fold result_k ~init:(0.0, 0, 0)
+                        ~f:(fun (total_time, timeout, success) (time_opt, correct) ->
+                            ( total_time +. Option.value time_opt ~default:0.0,
+                            timeout + (time_opt |> Option.is_none |> Bool.to_int),
+                            success + Bool.to_int correct ))
+                    in
+                    Printf.printf
+                        "number of examples: %d\n\
+                        average time:%.4f\n\
+                        timeout: %d\n\
+                        success: %d\n"
+                        k
+                        (total_time /. Float.of_int (trial_count - timeout))
+                        timeout success;
+                    Out_channel.flush stdout;
+                    Out_channel.close log_channel))
+        else
+            handle_inputs
+            ~fname:input_spec
+            ~use_myth
+            ~use_smyth
+            ~use_simple
+            ~use_l2
+            ~log
+            ~print_times
+            ~no_experiments
+            ~tc_synth
+            ~check_equiv1
+            ~check_equiv2
+            ~use_random
     ]
 
 let () =

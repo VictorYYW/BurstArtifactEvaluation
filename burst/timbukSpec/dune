@@ -7,4 +7,6 @@
     (public_name timbukSpec)
     (libraries collections timbuk codemap unicode
     ;timbukTyping
-    ))
+    )
+    (flags (:standard -w -6-27-32-33-39))
+    )
