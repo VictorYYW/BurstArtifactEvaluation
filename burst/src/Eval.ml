@@ -1,6 +1,8 @@
 open MyStdLib
 open Lang
 
+exception NotExhaustive
+
 let rec evaluate
     (e : Expr.t)
   : Value.t =
@@ -76,8 +78,11 @@ let rec evaluate
         | Unctor (i,e) ->
           let v = evaluate e in
           let (i',e) = Value.destruct_ctor_exn v in
-          assert (Id.equal i  i');
-          e
+          (* assert (Id.equal i  i'); *)
+          if Id.equal i i' then
+            e
+          else
+            raise NotExhaustive
       in
       l.eval <- Some ans;
       ans

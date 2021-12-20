@@ -62,6 +62,76 @@ let parse_random_proj :
           assertion ));
   }
 
+let parse_with_errors (type a)
+    (parser : (Lexing.lexbuf -> Parser2.token) -> Lexing.lexbuf -> a)
+    (s : string) : a =
+  let lexbuf = Lexing.from_string ~with_positions:true s in
+  try parser Lexer2.token lexbuf
+  with _ ->
+    failwith
+      ("Unexpected token between positions: ("
+      ^ Int.to_string lexbuf.lex_start_p.pos_lnum
+      ^ ","
+      ^ Int.to_string (lexbuf.lex_start_p.pos_cnum - lexbuf.lex_start_p.pos_bol)
+      ^ ") and ("
+      ^ Int.to_string lexbuf.lex_curr_p.pos_lnum
+      ^ ","
+      ^ Int.to_string (lexbuf.lex_curr_p.pos_cnum - lexbuf.lex_curr_p.pos_bol)
+      ^ ")")
+
+(* parse random examples from json *)
+let parse_io_proj :
+  fname:String.t ->
+    exs_str:String.t ->
+    Problem.t ->
+    (unit ->
+    (Value.t * Value.t) list 
+    * (Value.t * Value.t) list)
+    reference_projection =
+ fun ~fname ~exs_str problem ->
+  {
+    proj =
+      (fun {
+             function_name;
+             k_max;
+             d_in;
+             d_out;
+             p_in;
+             assertion;
+             func;
+             _;
+           } () ->
+        let i_e = problem.full_eval_context in
+        let rec concat_L_input (e: Expr.t) : Expr.t =
+          match Expr.node e with
+              | Ctor (Id "Nil", _) -> Expr.mk_ctor (Id.create "LNil") Expr.mk_unit
+              | Ctor (Id "Cons", hd_tl) ->
+                (match Expr.node hd_tl with
+                 | Tuple [hd; tl] ->
+                   Expr.mk_ctor (Id.create "LCons") (Expr.mk_tuple [hd; concat_L_input tl])
+                | _ -> failwith "impossible0")
+              | _ -> failwith (Printf.sprintf "impossible: %s" (Expr.show e))
+            in
+        let io_expr_to_val (es, e) = 
+              let vs =
+                List.map
+                  ~f:(Eval.evaluate_with_holes ~eval_context:i_e)
+                  es
+              in
+              let v =
+                Eval.evaluate_with_holes
+                  ~eval_context:i_e
+                  e
+              in
+              (Value.mk_tuple vs,v) in
+        let assertion =
+          List.map assertion ~f:(fun (i, o) -> io_expr_to_val (d_in i, d_out o))
+        in
+        let exs = parse_with_errors Parser2.examples exs_str in
+        List.map exs ~f:(fun (es, o) -> io_expr_to_val ((if String.equal fname "list_concat" then List.map es ~f:concat_L_input else es), o) ), assertion
+        );
+  }
+
 (* let newline_regexp = *)
 (*   Str.regexp " *\n+ *" *)
 

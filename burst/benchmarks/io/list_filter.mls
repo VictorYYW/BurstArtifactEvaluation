@@ -10,18 +10,18 @@ type bool =
   | True
   | False
 
-let is_even =
-  fix (is_even : nat -> bool) =
+let isEven =
+  fix (isEven : nat -> bool) =
     fun (x1 : nat) ->
       match x1 with
       | O -> True
       | S x1p ->
         (match x1p with
          | O -> False
-         | S x1pp -> is_even x1pp)
+         | S x1pp -> isEven x1pp)
 ;;
 
-let is_nonzero =
+let isNonzero =
   fun (x1 : nat) ->
     match x1 with
     | O -> False
@@ -30,8 +30,8 @@ let is_nonzero =
 
 synth (nat -> bool) -> list -> list satisfying
 
-[is_even,Nil] -> Nil,
-[is_even,Cons(2,Nil)] -> Cons(2,Nil),
-[is_even,Cons(0,Cons(0,Nil))] -> Cons(0,Cons(0,Nil)),
-[is_even,Cons(1,Cons(0,Cons(1,Nil)))] -> Cons(0,Nil),
-[is_nonzero,Cons(0,Nil)] -> Nil,
+[isEven,Nil] -> Nil,
+[isEven,Cons(2,Nil)] -> Cons(2,Nil),
+[isEven,Cons(0,Cons(0,Nil))] -> Cons(0,Cons(0,Nil)),
+[isEven,Cons(1,Cons(0,Cons(1,Nil)))] -> Cons(0,Nil),
+[isNonzero,Cons(0,Nil)] -> Nil,
