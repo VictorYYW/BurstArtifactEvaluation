@@ -473,14 +473,16 @@ let param =
                   prerr_endline ("Unknown built-in function '" ^ input_spec ^ "'.");
                   exit 1
               in
-try
-                          let exp, time_spent =
-                            Time.timed (fun _ -> snd (S.synth (S.init ~problem ~context ~tin ~tout) exs))
-                          in
-                          Printf.printf "%s\n\n%.4f %b\n" (Expr.show exp)time_spent
-                            (is_consistent context exp assertion);
-                        with Time.Timeout ->
-                          Printf.printf "TIMEOUT\n";
+              try
+                let exp, time_spent =
+                  Time.timed (fun _ -> snd (S.synth (S.init ~problem ~context ~tin ~tout) exs))
+                in
+                Printf.printf "%s\n\n%.4f %b\n" (Expr.show exp)time_spent
+                  (is_consistent context exp assertion);
+              with
+              | Stack_overflow -> Printf.printf "STACKOVERFLOW\n"
+              |  Time.Timeout ->
+                Printf.printf "TIMEOUT\n";
 
 )        else if json_fuzz then
 
