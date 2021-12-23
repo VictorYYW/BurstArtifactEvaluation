@@ -15,11 +15,11 @@ let int : int expr_t = fun n -> Expr.from_int n
 
 let var : string expr_t = fun x ->
   match x with
-  | "isEven" -> Expr.mk_var (Id.create "is_even")
-  | "isNonzero" -> Expr.mk_var (Id.create "is_nonzero")
-  | "countOdd" -> Expr.mk_var (Id.create "count_odd")
-  | "add" -> Expr.mk_var (Id.create "sum")
-  | "isOdd" -> Expr.mk_var (Id.create "is_odd")
+  (* | "isEven" -> Expr.mk_var (Id.create "is_even") *)
+  (* | "isNonzero" -> Expr.mk_var (Id.create "is_nonzero") *)
+  (* | "countOdd" -> Expr.mk_var (Id.create "count_odd") *)
+  (* | "add" -> Expr.mk_var (Id.create "sum") *)
+  (* | "isOdd" -> Expr.mk_var (Id.create "is_odd") *)
   | _ -> Expr.mk_var (Id.create x)
 
 let opt : 'a expr_t -> 'a option expr_t =
