@@ -7,25 +7,25 @@ type list =
   | Cons of nat * list
 
 type bool =
-  | True
-  | False
+  | T
+  | F
 
 let isEven =
   fix (isEven : nat -> bool) =
     fun (x1 : nat) ->
       match x1 with
-      | O -> True
+      | O -> T
       | S x1p ->
         (match x1p with
-         | O -> False
+         | O -> F
          | S x1pp -> isEven x1pp)
 ;;
 
 let isNonzero =
   fun (x1 : nat) ->
     match x1 with
-    | O -> False
-    | S _ -> True
+    | O -> F
+    | S _ -> T
 ;;
 
 synth (nat -> bool) -> list -> list satisfying
