@@ -426,11 +426,11 @@ module Expr = struct
 
   let mk_true_exp
     : t =
-    mk_ctor (Id.create "True") (mk_tuple [])
+    mk_ctor (Id.create "T") (mk_tuple [])
 
   let mk_false_exp
     : t =
-    mk_ctor (Id.create "False") (mk_tuple [])
+    mk_ctor (Id.create "F") (mk_tuple [])
 
   let mk_constant_func
       (t:Type.t)
@@ -814,9 +814,9 @@ module Value = struct
   let destruct_tuple_exn (v:t) : t list =
     Option.value_exn (destruct_tuple v)
 
-  let mk_true : t = mk_ctor (Id.create "True") (mk_tuple [])
+  let mk_true : t = mk_ctor (Id.create "T") (mk_tuple [])
 
-  let mk_false : t = mk_ctor (Id.create "False") (mk_tuple [])
+  let mk_false : t = mk_ctor (Id.create "F") (mk_tuple [])
 
   let from_bool (b:bool) : t = if b then mk_true else mk_false
 
@@ -925,8 +925,8 @@ module Value = struct
       ~wildcard_f:1
 
   let unit_ = create (Tuple [])
-  let true_ = create (Ctor (Id.create "True",unit_))
-  let false_ = create (Ctor (Id.create "False",unit_))
+  let true_ = create (Ctor (Id.create "T",unit_))
+  let false_ = create (Ctor (Id.create "F",unit_))
 
   let rec from_int n =
     if n = 0 then

@@ -7,9 +7,9 @@ type 'a expr_t = 'a -> Expr.t
 
 let bool : bool expr_t = fun b ->
   if b then
-    Expr.mk_ctor (Id.create "True") (Expr.mk_unit)
+    Expr.mk_ctor (Id.create "T") (Expr.mk_unit)
       else 
-    Expr.mk_ctor (Id.create "False") (Expr.mk_unit)
+    Expr.mk_ctor (Id.create "F") (Expr.mk_unit)
 
 let int : int expr_t = fun n -> Expr.from_int n
 
