@@ -1,6 +1,6 @@
 type bool =
-  | True
-  | False
+  | T
+  | F
 
 type list =
   | Nil
@@ -8,10 +8,10 @@ type list =
 
 synth list -> bool satisfying
 
-[Nil] -> True,
-[Cons(False,Nil)] -> True,
-[Cons(True,Nil)] -> False,
-[Cons(False,Cons(False,Nil))] -> True,
-[Cons(False,Cons(True,Nil))] -> False,
-[Cons(True,Cons(False,Nil))] -> False,
-[Cons(True,Cons(True,Nil))] -> True,
+[Nil] -> T,
+[Cons(F,Nil)] -> T,
+[Cons(T,Nil)] -> F,
+[Cons(F,Cons(F,Nil))] -> T,
+[Cons(F,Cons(T,Nil))] -> F,
+[Cons(T,Cons(F,Nil))] -> F,
+[Cons(T,Cons(T,Nil))] -> T,
