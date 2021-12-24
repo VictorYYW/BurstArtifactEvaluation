@@ -441,7 +441,7 @@ let param =
           let evaled = Eval.evaluate_with_holes ~eval_context:ctx.evals apped in
           Value.equal evaled outp
           with
-          | Eval.NotExhaustive -> false
+          | _ -> false
         in
         let is_consistent ctx ref_e ios =
           List.for_all ios ~f:(fun (i, o) -> checker ctx ref_e i o)
