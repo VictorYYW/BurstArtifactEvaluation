@@ -26,7 +26,8 @@ module Time = struct
 
   let timed f : 'a * float =
     let start_time = now () in
-    let result = delayed_fun f in
+    (* let result = delayed_fun f in *)
+    let result = f () in
     let end_time = now () in
     let time = Span.to_sec (Time.diff end_time start_time) in
     (result, time)
