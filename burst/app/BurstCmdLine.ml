@@ -485,68 +485,7 @@ let param =
               |  Time.Timeout ->
                 Printf.printf "TIMEOUT\n";
 
-)        else if json_fuzz then
-
-          List.iter benchmarks ~f:(fun builtin ->
-              Printf.printf "%s\n" builtin;
-              let p_unprocessed =
-                ParserContainer.unprocessed_problem
-                  ((MyStdLib.SimpleFile.read_from_file ~fname:("benchmarks/io/"^builtin^".mls")))
-              in
-              let p_unprocessed = Problem.update_all_import_bases p_unprocessed builtin in
-              let p_unprocessed = import_imports p_unprocessed in
-              let problem = Problem.process p_unprocessed in
-              let context = Problem.extract_context problem in
-              let (tin,tout) = problem.synth_type in
-              let ((benchmark : (Value.t * Value.t) list list list),
-                   (assertion : (Value.t * Value.t) list) ) =
-                match
-                  List.Assoc.find
-                    (References.all (Fuzz.parse_random_proj ~n:trial_count ~max_k problem))
-                    builtin ~equal:String.equal
-                with
-                | Some benchmark_thunk -> benchmark_thunk ()
-                | None                 ->
-                  prerr_endline ("Unknown built-in function '" ^ builtin ^ "'.");
-                  exit 1
-              in
-              (* k = num_of_examples - 1*)
-              List.iteri benchmark ~f:(fun k trials ->
-                  let k = k + 1 in
-                  let log_file = "log/" ^ builtin ^ string_of_int k in
-                  let log_channel = Out_channel.create log_file in
-                  let result_k : (float option * bool) list =
-                    List.map trials ~f:(fun exs ->
-                        try
-                          let exp, time_spent =
-                            Time.timed (fun _ -> snd (S.synth (S.init ~problem ~context ~tin ~tout) exs))
-                          in
-                          Printf.fprintf log_channel "time_spent: %.4f\n" time_spent;
-                          ( Some time_spent,
-                            is_consistent context exp assertion
-                          )
-                        with Time.Timeout ->
-                          Printf.fprintf log_channel "time_spent: TIMEOUT\n";
-                          (None, false))
-                  in
-                  let total_time, timeout, success =
-                    List.fold result_k ~init:(0.0, 0, 0)
-                      ~f:(fun (total_time, timeout, success) (time_opt, correct) ->
-                          ( total_time +. Option.value time_opt ~default:0.0,
-                            timeout + (time_opt |> Option.is_none |> Bool.to_int),
-                            success + Bool.to_int correct ))
-                  in
-                  Printf.printf
-                    "number of examples: %d\n\
-                     average time:%.4f\n\
-                     timeout: %d\n\
-                     success: %d\n"
-                    k
-                    (total_time /. Float.of_int (trial_count - timeout))
-                    timeout success;
-                  Out_channel.flush stdout;
-                  Out_channel.close log_channel))
-        else
+)        else 
           handle_inputs
             ~fname:input_spec
             ~use_myth

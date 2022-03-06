@@ -2,66 +2,6 @@ open MyStdLib
 open References
 open Lang
 
-(* parse random examples from json *)
-let parse_random_proj :
-    n:int ->
-    max_k:int ->
-    Problem.t ->
-    (unit ->
-    (Value.t * Value.t) list list list
-    * (Value.t * Value.t) list)
-    reference_projection =
- fun ~n ~max_k problem ->
-  {
-    proj =
-      (fun {
-             function_name;
-             k_max;
-             d_in;
-             d_out;
-             p_in;
-             assertion;
-             func;
-             _;
-           } () ->
-        let i_e = problem.full_eval_context in
-        let io_expr_to_val (es, e) = 
-              let vs =
-                List.map
-                  ~f:(Eval.evaluate_with_holes ~eval_context:i_e)
-                  es
-              in
-              let v =
-                Eval.evaluate_with_holes
-                  ~eval_context:i_e
-                  e
-              in
-              (Value.mk_tuple vs,v) in
-        let assertion =
-          List.map assertion ~f:(fun (i, o) -> io_expr_to_val (d_in i, d_out o))
-        in
-        let json =
-          Yojson.Basic.from_file ((Sys.getenv "HOME")^"/sis-lambda/example_gen/" ^ function_name ^ ".json")
-        in
-        (List.map
-            (List.range ~stop:`inclusive 1 max_k)
-            ~f:(fun k ->
-              let open Yojson.Basic.Util in
-              (* k is size of example set *)
-              json |> member (Int.to_string k) |> to_list |> fun l ->
-              List.take l n
-              |> List.map ~f:(fun set ->
-                     set |> to_list
-                     |> List.map ~f:(fun io ->
-                            match to_list io with
-                            | [ i; o ] ->
-                                let input_val = p_in i in
-                                let output_val = func input_val in
-                                io_expr_to_val (d_in input_val, d_out output_val)
-                            | _        -> failwith "json not well-formated"))),
-          assertion ));
-  }
-
 let parse_with_errors (type a)
     (parser : (Lexing.lexbuf -> Parser2.token) -> Lexing.lexbuf -> a)
     (s : string) : a =
@@ -96,7 +36,6 @@ let parse_io_proj :
              k_max;
              d_in;
              d_out;
-             p_in;
              assertion;
              func;
              _;

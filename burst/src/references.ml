@@ -54,7 +54,6 @@ type ('i, 'o) reference = {
   d_out : 'o Denotation.expr_t;
   expert : ('i * 'o) list;
   assertion : ('i * 'o) list;
-  p_in : 'i Json.parse_t;
   func : 'i -> 'o;
 }
 
@@ -63,25 +62,85 @@ type 'a reference_projection = { proj : 'i 'o. ('i, 'o) reference -> 'a }
 let all : 'a reference_projection -> (string * 'a) list =
  fun { proj } ->
   [
-    (* ( "bool_band" , proj { function_name = "and" ; k_max = 4 ; d_in =
-       Denotation.args2 Denotation.bool Denotation.bool ; d_out =
-       Denotation.bool ;  func =
-       let f : bool * bool -> bool = fun (x, y) -> x && y in f } ) ; (
-       "bool_bor" , proj { function_name = "or" ; k_max = 4 ; d_in =
-       Denotation.args2 Denotation.bool Denotation.bool ; d_out =
-       Denotation.bool ;  func =
-       let f : bool * bool -> bool = fun (x, y) -> x || y in f } ) ; (
-       "bool_impl" , proj { function_name = "impl" ; k_max = 4 ; d_in =
-       Denotation.args2 Denotation.bool Denotation.bool ; d_out =
-       Denotation.bool ;  func =
-       let f : bool * bool -> bool = fun (x, y) -> (not x) || y in f } ) ; (
-       "bool_neg" , proj { function_name = "neg" ; k_max = 2 ; d_in =
-       Denotation.bool ; d_out = Denotation.bool ;  func =
-       let f : bool -> bool = fun x -> not x in f } ) ; ( "bool_xor" , proj {
-       function_name = "xor" ; k_max = 4 ; d_in = Denotation.args2
-       Denotation.bool Denotation.bool ; d_out = Denotation.bool ; input =
-       Sample2.pair Sample2.bool Sample2.bool ; func = let f : bool * bool ->
-       bool = fun (x, y) -> x <> y in f } ) ; *)
+    ( "bool_band" ,
+      proj {
+        function_name = "bool_band" ;
+        k_max = 4 ;
+        d_in = Denotation.args2 Denotation.bool Denotation.bool ;
+        d_out = Denotation.bool ;
+        expert = [];
+        assertion = [
+          ((true, true), true);
+          ((true, false), false);
+          ((false, true), false);
+          ((false, false), false);
+        ];
+        func =
+          let f : bool * bool -> bool = fun (x, y) -> x && y in f ;
+      } ) ;
+    (
+      "bool_bor" ,
+      proj {
+        function_name = "bool_bor" ;
+        k_max = 4 ;
+        d_in = Denotation.args2 Denotation.bool Denotation.bool ;
+        d_out = Denotation.bool ;
+        expert = [];
+        assertion = [
+          ((true, true), true);
+          ((true, false), true);
+          ((false, true), true);
+          ((false, false), false);
+        ];
+        func =
+          let f : bool * bool -> bool = fun (x, y) -> x || y in f ;
+      } )
+    ; (
+      "bool_impl" ,
+      proj {
+        function_name = "bool_impl" ;
+        k_max = 4 ;
+        d_in = Denotation.args2 Denotation.bool Denotation.bool ;
+        d_out = Denotation.bool ;
+        expert = [];
+        assertion = [
+          ((true, true), true);
+          ((true, false), false);
+          ((false, true), true);
+          ((false, false), true);
+        ];
+        func =
+          let f : bool * bool -> bool = fun (x, y) -> (not x) || y in f;
+
+      } ) ;
+    (
+      "bool_neg" ,
+      proj {
+        function_name = "bool_neg" ;
+        k_max = 2 ;
+        d_in = Denotation.arg1 Denotation.bool ;
+        d_out = Denotation.bool ;
+        expert = [];
+        assertion = [ (true, false); (false, true) ];
+        func =
+          let f : bool -> bool = fun x -> not x in f ;
+      } ) ;
+    ( "bool_xor" ,
+      proj {
+        function_name = "bool_xor" ;
+        k_max = 4 ;
+        d_in = Denotation.args2 Denotation.bool Denotation.bool ;
+        d_out = Denotation.bool ;
+        expert = [];
+        assertion = [
+          ((true, true), false);
+          ((true, false), true);
+          ((false, true), true);
+          ((false, false), false);
+        ];
+        func = (let f : bool * bool -> bool = fun (x, y) -> not (Bool.equal x y) in
+             f);
+      } ) ;
     ( "list_append",
       proj
         {
@@ -92,7 +151,6 @@ let all : 'a reference_projection -> (string * 'a) list =
               (Denotation.list Denotation.int)
               (Denotation.list Denotation.int);
           d_out = Denotation.list Denotation.int;
-          p_in = Json.args2 (Json.list Json.int) (Json.list Json.int);
           
           expert =
             [
@@ -135,7 +193,6 @@ let all : 'a reference_projection -> (string * 'a) list =
           k_max = 20;
           d_in = Denotation.arg1 (Denotation.list Denotation.int);
           d_out = Denotation.list Denotation.int;
-          p_in = Json.list Json.int;
           
           expert =
             [
@@ -177,7 +234,6 @@ let all : 'a reference_projection -> (string * 'a) list =
           k_max = 20;
           d_in = Denotation.arg1 (Denotation.nested_list Denotation.int);
           d_out = Denotation.list Denotation.int;
-          p_in = Json.nested_list Json.int;
           
           expert =
             [
@@ -220,7 +276,6 @@ let all : 'a reference_projection -> (string * 'a) list =
           d_in =
             Denotation.args2 (Denotation.list Denotation.int) Denotation.int;
           d_out = Denotation.list Denotation.int;
-          p_in = Json.args2 (Json.list Json.int) Json.int;
           
           expert =
             [
@@ -265,7 +320,6 @@ let all : 'a reference_projection -> (string * 'a) list =
           k_max = 15;
           d_in = Denotation.arg1 (Denotation.list Denotation.bool);
           d_out = Denotation.bool;
-          p_in = Json.list Json.bool;
           
           expert =
             [
@@ -305,7 +359,6 @@ let all : 'a reference_projection -> (string * 'a) list =
           d_in =
             Denotation.args2 Denotation.var (Denotation.list Denotation.int);
           d_out = Denotation.list Denotation.int;
-          p_in = Json.args2 Json.var (Json.list Json.int);
           expert =
             [
               (("isEven", [ 2; 3; 4; 5 ]), [ 2; 4 ]);
@@ -358,7 +411,6 @@ let all : 'a reference_projection -> (string * 'a) list =
             Denotation.args3 Denotation.var Denotation.int
               (Denotation.list Denotation.int);
           d_out = Denotation.int;
-          p_in = Json.args3 Json.var Json.int (Json.list Json.int);
           expert =
             [ (("add", 3, [ 2; 3 ]), 8); (("countOdd", 1, [ 2; 3; 4 ]), 2) ];
           assertion =
@@ -411,7 +463,6 @@ let all : 'a reference_projection -> (string * 'a) list =
           k_max = 10;
           d_in = Denotation.arg1 (Denotation.list Denotation.int);
           d_out = Denotation.int;
-          p_in = Json.list Json.int;
           
           expert = [ ([ 3; 2; 1; 0 ], 3) ];
           assertion =
@@ -444,7 +495,6 @@ let all : 'a reference_projection -> (string * 'a) list =
           k_max = 10;
           d_in = Denotation.arg1 (Denotation.list Denotation.int);
           d_out = Denotation.list Denotation.int;
-          p_in = Json.list Json.int;
           
           expert = [ ([ 1; 2; 3 ], [ 2; 3; 4 ]) ];
           assertion =
@@ -474,7 +524,6 @@ let all : 'a reference_projection -> (string * 'a) list =
           k_max = 20;
           d_in = Denotation.arg1 (Denotation.list Denotation.int);
           d_out = Denotation.opt Denotation.int;
-          p_in = Json.list Json.int;
           
           expert = [ ([ 1; 2; 3 ], Some 3) ];
           assertion =
@@ -518,7 +567,6 @@ let all : 'a reference_projection -> (string * 'a) list =
           k_max = 5;
           d_in = Denotation.arg1 (Denotation.list Denotation.int);
           d_out = Denotation.int;
-          p_in = Json.list Json.int;
           
           expert = [ ([ 1; 3; 2 ], 3) ];
           assertion =
@@ -542,7 +590,6 @@ let all : 'a reference_projection -> (string * 'a) list =
           d_in =
             Denotation.args2 Denotation.var (Denotation.list Denotation.int);
           d_out = Denotation.list Denotation.int;
-          p_in = Json.args2 Json.var (Json.list Json.int);
           expert =
             [
               (("inc", [ 1; 2; 3 ]), [ 2; 3; 4 ]);
@@ -593,7 +640,6 @@ let all : 'a reference_projection -> (string * 'a) list =
           d_in =
             Denotation.args2 (Denotation.list Denotation.int) Denotation.int;
           d_out = Denotation.int;
-          p_in = Json.args2 (Json.list Json.int) Json.int;
           
           expert = [ (([ 11; 22; 33; 44 ], 2), 33) ];
           assertion =
@@ -640,7 +686,6 @@ let all : 'a reference_projection -> (string * 'a) list =
           k_max = 20;
           d_in = Denotation.arg1 (Denotation.list Denotation.int);
           d_out = Denotation.list Denotation.int;
-          p_in = Json.list Json.int;
           
           expert =
             [
@@ -688,7 +733,6 @@ let all : 'a reference_projection -> (string * 'a) list =
           k_max = 15;
           d_in = Denotation.arg1 (Denotation.list Denotation.int);
           d_out = Denotation.list Denotation.int;
-          p_in = Json.list Json.int;
           
           expert = [ ([ 1; 3; 2 ], [ 2; 3; 1 ]); ([ 3; 0; 1 ], [ 1; 0; 3 ]) ];
           assertion =
@@ -721,7 +765,6 @@ let all : 'a reference_projection -> (string * 'a) list =
           k_max = 15;
           d_in = Denotation.arg1 (Denotation.list Denotation.int);
           d_out = Denotation.list Denotation.int;
-          p_in = Json.list Json.int;
           
           expert = [ ([ 1; 3; 2 ], [ 2; 3; 1 ]); ([ 3; 0; 1 ], [ 1; 0; 3 ]) ];
           assertion =
@@ -754,7 +797,6 @@ let all : 'a reference_projection -> (string * 'a) list =
           k_max = 15;
           d_in = Denotation.arg1 (Denotation.list Denotation.int);
           d_out = Denotation.list Denotation.int;
-          p_in = Json.list Json.int;
           
           expert = [ ([ 1; 3; 2 ], [ 2; 3; 1 ]) ];
           assertion =
@@ -790,7 +832,6 @@ let all : 'a reference_projection -> (string * 'a) list =
               (Denotation.list Denotation.int)
               (Denotation.list Denotation.int);
           d_out = Denotation.list Denotation.int;
-          p_in = Json.args2 (Json.list Json.int) (Json.list Json.int);
           
           expert =
             [
@@ -837,7 +878,6 @@ let all : 'a reference_projection -> (string * 'a) list =
           d_in =
             Denotation.args2 (Denotation.list Denotation.int) Denotation.int;
           d_out = Denotation.list Denotation.int;
-          p_in = Json.args2 (Json.list Json.int) Json.int;
           
           expert = [ (([ 1; 3 ], 2), [ 1; 3; 2 ]) ];
           assertion =
@@ -875,7 +915,6 @@ let all : 'a reference_projection -> (string * 'a) list =
           k_max = 20;
           d_in = Denotation.arg1 (Denotation.list Denotation.int);
           d_out = Denotation.list Denotation.int;
-          p_in = Json.list Json.int;
           
           expert =
             [
@@ -920,7 +959,6 @@ let all : 'a reference_projection -> (string * 'a) list =
           d_in =
             Denotation.args2 (Denotation.list Denotation.int) Denotation.int;
           d_out = Denotation.list Denotation.int;
-          p_in = Json.args2 (Json.list Json.int) Json.int;
           
           expert =
             [
@@ -966,7 +1004,6 @@ let all : 'a reference_projection -> (string * 'a) list =
           k_max = 10;
           d_in = Denotation.arg1 (Denotation.list Denotation.int);
           d_out = Denotation.list Denotation.int;
-          p_in = Json.list Json.int;
           
           expert = [ ([ 3; 4; 2 ], [ 3; 3; 4; 4; 2; 2 ]) ];
           assertion =
@@ -999,7 +1036,6 @@ let all : 'a reference_projection -> (string * 'a) list =
           k_max = 10;
           d_in = Denotation.arg1 (Denotation.list Denotation.int);
           d_out = Denotation.int;
-          p_in = Json.list Json.int;
           
           expert =
             [
@@ -1036,7 +1072,6 @@ let all : 'a reference_projection -> (string * 'a) list =
           d_in =
             Denotation.args2 Denotation.int (Denotation.list Denotation.int);
           d_out = Denotation.list Denotation.int;
-          p_in = Json.args2 Json.int (Json.list Json.int);
           
           expert =
             [
@@ -1080,7 +1115,6 @@ let all : 'a reference_projection -> (string * 'a) list =
           k_max = 10;
           d_in = Denotation.arg1 (Denotation.list Denotation.int);
           d_out = Denotation.list Denotation.int;
-          p_in = Json.list Json.int;
           
           expert = [ ([ 1; 2; 3 ], [ 2; 3 ]) ];
           assertion =
@@ -1105,59 +1139,1330 @@ let all : 'a reference_projection -> (string * 'a) list =
              in
              f);
           
+        } );
+    ( "tree_collect_leaves",
+      proj
+        {
+          function_name = "treeCollectLeaves";
+          k_max = 20;
+          d_in = Denotation.arg1 (Denotation.tree Denotation.bool);
+          d_out = Denotation.list Denotation.bool;
+          func =
+            (let f : bool Tree2.t -> bool list =
+              fun tree -> Tree2.in_order tree
+             in
+             f);
+          expert = [];
+          assertion =
+            [
+              ( Node
+                  ( Leaf,
+                    false,
+                    Node
+                      ( Node
+                          ( Leaf,
+                            true,
+                            Node
+                              ( Node (Leaf, false, Node (Leaf, true, Leaf)),
+                                true,
+                                Leaf ) ),
+                        false,
+                        Leaf ) ),
+                [ false; true; false; true; true; false ] );
+              (Leaf, []);
+              ( Node (Leaf, true, Node (Node (Leaf, true, Leaf), false, Leaf)),
+                [ true; true; false ] );
+              ( Node
+                  ( Leaf,
+                    false,
+                    Node
+                      ( Leaf,
+                        true,
+                        Node
+                          ( Leaf,
+                            true,
+                            Node (Leaf, true, Node (Leaf, true, Leaf)) ) ) ),
+                [ false; true; true; true; true ] );
+              ( Node
+                  ( Node
+                      ( Node
+                          ( Node (Node (Leaf, false, Leaf), true, Leaf),
+                            true,
+                            Node (Leaf, false, Leaf) ),
+                        false,
+                        Leaf ),
+                    true,
+                    Leaf ),
+                [ false; true; true; false; false; true ] );
+              ( Node
+                  ( Leaf,
+                    true,
+                    Node
+                      ( Node
+                          ( Node
+                              ( Leaf,
+                                true,
+                                Node (Node (Leaf, true, Leaf), true, Leaf) ),
+                            false,
+                            Leaf ),
+                        true,
+                        Leaf ) ),
+                [ true; true; true; true; false; true ] );
+              ( Node
+                  ( Node
+                      (Node (Node (Leaf, true, Leaf), false, Leaf), true, Leaf),
+                    true,
+                    Leaf ),
+                [ true; false; true; true ] );
+              ( Node
+                  ( Node (Leaf, true, Node (Leaf, false, Leaf)),
+                    true,
+                    Node (Node (Node (Leaf, true, Leaf), true, Leaf), true, Leaf)
+                  ),
+                [ true; false; true; true; true; true ] );
+              ( Node
+                  ( Leaf,
+                    false,
+                    Node
+                      ( Node
+                          ( Leaf,
+                            false,
+                            Node (Node (Leaf, true, Leaf), true, Leaf) ),
+                        false,
+                        Leaf ) ),
+                [ false; false; true; true; false ] );
+              ( Node
+                  ( Node
+                      (Leaf, false, Node (Node (Leaf, true, Leaf), true, Leaf)),
+                    true,
+                    Node (Leaf, true, Leaf) ),
+                [ false; true; true; true; true ] );
+              ( Node
+                  ( Leaf,
+                    true,
+                    Node
+                      ( Node
+                          ( Leaf,
+                            false,
+                            Node
+                              ( Node (Leaf, false, Leaf),
+                                true,
+                                Node (Leaf, false, Leaf) ) ),
+                        true,
+                        Leaf ) ),
+                [ true; false; false; true; false; true ] );
+              ( Node
+                  ( Node (Node (Leaf, false, Leaf), true, Leaf),
+                    true,
+                    Node (Node (Leaf, false, Leaf), true, Leaf) ),
+                [ false; true; true; false; true ] );
+              ( Node
+                  ( Node (Node (Leaf, true, Leaf), true, Leaf),
+                    false,
+                    Node
+                      (Node (Leaf, true, Leaf), false, Node (Leaf, true, Leaf))
+                  ),
+                [ true; true; false; true; false; true ] );
+              ( Node
+                  ( Node (Leaf, false, Leaf),
+                    true,
+                    Node
+                      ( Node
+                          ( Node (Leaf, true, Node (Leaf, false, Leaf)),
+                            false,
+                            Leaf ),
+                        true,
+                        Leaf ) ),
+                [ false; true; true; false; false; true ] );
+              ( Node
+                  ( Leaf,
+                    true,
+                    Node
+                      ( Node
+                          ( Leaf,
+                            true,
+                            Node (Leaf, true, Node (Leaf, true, Leaf)) ),
+                        true,
+                        Node (Leaf, false, Leaf) ) ),
+                [ true; true; true; true; true; false ] );
+              ( Node
+                  ( Node
+                      ( Node
+                          ( Node
+                              ( Node (Leaf, true, Leaf),
+                                false,
+                                Node (Leaf, false, Leaf) ),
+                            false,
+                            Leaf ),
+                        true,
+                        Leaf ),
+                    true,
+                    Leaf ),
+                [ true; false; false; false; true; true ] );
+              ( Node
+                  ( Leaf,
+                    false,
+                    Node
+                      (Leaf, false, Node (Leaf, true, Node (Leaf, true, Leaf)))
+                  ),
+                [ false; false; true; true ] );
+              ( Node
+                  ( Leaf,
+                    true,
+                    Node
+                      ( Leaf,
+                        false,
+                        Node
+                          ( Node (Node (Leaf, false, Leaf), true, Leaf),
+                            false,
+                            Leaf ) ) ),
+                [ true; false; false; true; false ] );
+              ( Node
+                  ( Node
+                      ( Leaf,
+                        true,
+                        Node
+                          ( Leaf,
+                            true,
+                            Node (Leaf, true, Node (Leaf, false, Leaf)) ) ),
+                    false,
+                    Leaf ),
+                [ true; true; true; false; false ] );
+              ( Node
+                  ( Node (Leaf, false, Leaf),
+                    true,
+                    Node (Node (Leaf, false, Leaf), false, Leaf) ),
+                [ false; true; false; false ] );
+            ];
+        } );
+    ( "nat_iseven" ,
+      proj {
+        function_name = "nat_iseven" ;
+        k_max = 4 ;
+        d_in = Denotation.arg1 Denotation.int ;
+        d_out = Denotation.bool ;
+        expert = [ (2, true); (3, false) ];
+        assertion = [ (0, true); (1, false); (2, true); (3, false) ];
+        func = let rec f : int -> bool = fun x -> if x = 0 then true else if x = 1 then false else f (x - 2) in f
+      } ) ;
+    ( "nat_max" ,
+      proj {
+        function_name = "nat_max" ;
+        k_max = 15 ;
+        d_in = Denotation.args2 Denotation.int Denotation.int ;
+        d_out = Denotation.int ;
+        expert = [ ((2, 3), 3); ((3, 2), 3); ((1, 2), 2) ];
+        assertion =
+          [
+            ((0, 0), 0);
+            ((2, 2), 2);
+            ((0, 3), 3);
+            ((2, 1), 2);
+            ((3, 0), 3);
+            ((0, 1), 1);
+            ((1, 0), 1);
+            ((3, 2), 3);
+            ((0, 2), 2);
+            ((1, 1), 1);
+            ((3, 1), 3);
+            ((2, 0), 2);
+            ((2, 3), 3);
+            ((1, 2), 2);
+            ((3, 3), 3);
+          ];
+        func = let f : int * int -> int = fun (x, y) -> if x >= y then x else y in f
+      } ) ;
+    ( "nat_pred" ,
+      proj {
+        function_name = "nat_pred" ;
+        k_max = 4 ;
+        d_in = Denotation.arg1 Denotation.int ;
+        d_out = Denotation.int ;
+        expert = [ (2, 1); (3, 2) ];
+        assertion = [ (0, 0); (1, 0); (3, 2); (2, 1) ];
+        func = let f : int -> int = fun x -> if x = 0 then 0 else x - 1 in f
+      } ) ;
+    ( "nat_add" ,
+      proj {
+        function_name = "nat_add" ;
+        k_max = 9 ;
+        d_in = Denotation.args2 Denotation.int Denotation.int ;
+        d_out = Denotation.int ;
+        expert = [ ((4, 5), 9) ];
+        assertion =
+          [
+            ((0, 0), 0);
+            ((2, 2), 4);
+            ((3, 0), 3);
+            ((2, 1), 3);
+            ((3, 3), 6);
+            ((1, 2), 3);
+            ((0, 2), 2);
+            ((1, 3), 4);
+            ((3, 2), 5);
+          ];
+        func = let f : int * int -> int = fun (x, y) -> x + y in f
+      } ) ;
+    (
+      "tree_binsert" ,
+      proj
+        {
+          function_name = "tree_binsert" ;
+          k_max = 20 ;
+          d_in = Denotation.args2 (Denotation.tree Denotation.int) Denotation.int ;
+          d_out = Denotation.tree Denotation.int ;
+          expert = [];
+          assertion =
+            [
+              ( (Node (Node (Leaf, 0, Node (Leaf, 0, Leaf)), 0, Leaf), 2),
+                Node
+                  (Node (Leaf, 0, Node (Leaf, 0, Leaf)), 0, Node (Leaf, 2, Leaf))
+              );
+              ((Leaf, 0), Node (Leaf, 0, Leaf));
+              ( (Node (Node (Leaf, 0, Leaf), 1, Leaf), 1),
+                Node (Node (Leaf, 0, Leaf), 1, Leaf) );
+              ( ( Node
+                    ( Leaf,
+                      3,
+                      Node (Node (Leaf, 3, Node (Leaf, 1, Leaf)), 3, Leaf) ),
+                  1 ),
+                Node
+                  ( Node (Leaf, 1, Leaf),
+                    3,
+                    Node (Node (Leaf, 3, Node (Leaf, 1, Leaf)), 3, Leaf) ) );
+              ( ( Node
+                    ( Node (Node (Node (Leaf, 0, Leaf), 0, Leaf), 1, Leaf),
+                      0,
+                      Leaf ),
+                  1 ),
+                Node
+                  ( Node (Node (Node (Leaf, 0, Leaf), 0, Leaf), 1, Leaf),
+                    0,
+                    Node (Leaf, 1, Leaf) ) );
+              ( (Node (Leaf, 0, Node (Leaf, 2, Leaf)), 2),
+                Node (Leaf, 0, Node (Leaf, 2, Leaf)) );
+              ( (Node (Node (Leaf, 2, Leaf), 2, Node (Leaf, 1, Leaf)), 3),
+                Node
+                  (Node (Leaf, 2, Leaf), 2, Node (Leaf, 1, Node (Leaf, 3, Leaf)))
+              );
+              ((Leaf, 1), Node (Leaf, 1, Leaf));
+              ( (Node (Node (Leaf, 2, Leaf), 3, Node (Leaf, 1, Leaf)), 1),
+                Node
+                  (Node (Node (Leaf, 1, Leaf), 2, Leaf), 3, Node (Leaf, 1, Leaf))
+              );
+              ( (Node (Node (Leaf, 3, Node (Leaf, 1, Leaf)), 1, Leaf), 1),
+                Node (Node (Leaf, 3, Node (Leaf, 1, Leaf)), 1, Leaf) );
+              ( ( Node
+                    ( Leaf,
+                      2,
+                      Node (Node (Leaf, 0, Node (Leaf, 1, Leaf)), 0, Leaf) ),
+                  0 ),
+                Node
+                  ( Node (Leaf, 0, Leaf),
+                    2,
+                    Node (Node (Leaf, 0, Node (Leaf, 1, Leaf)), 0, Leaf) ) );
+              ( (Node (Leaf, 3, Node (Leaf, 3, Node (Leaf, 1, Leaf))), 2),
+                Node
+                  (Node (Leaf, 2, Leaf), 3, Node (Leaf, 3, Node (Leaf, 1, Leaf)))
+              );
+              ( ( Node
+                    ( Node (Node (Leaf, 2, Leaf), 3, Node (Leaf, 1, Leaf)),
+                      3,
+                      Leaf ),
+                  1 ),
+                Node
+                  ( Node
+                      ( Node (Node (Leaf, 1, Leaf), 2, Leaf),
+                        3,
+                        Node (Leaf, 1, Leaf) ),
+                    3,
+                    Leaf ) );
+              ( ( Node
+                    ( Node (Node (Node (Leaf, 2, Leaf), 3, Leaf), 1, Leaf),
+                      2,
+                      Leaf ),
+                  0 ),
+                Node
+                  ( Node
+                      ( Node (Node (Node (Leaf, 0, Leaf), 2, Leaf), 3, Leaf),
+                        1,
+                        Leaf ),
+                    2,
+                    Leaf ) );
+              ( ( Node
+                    ( Leaf,
+                      3,
+                      Node (Node (Leaf, 2, Leaf), 3, Node (Leaf, 0, Leaf)) ),
+                  1 ),
+                Node
+                  ( Node (Leaf, 1, Leaf),
+                    3,
+                    Node (Node (Leaf, 2, Leaf), 3, Node (Leaf, 0, Leaf)) ) );
+              ( ( Node
+                    ( Node (Leaf, 2, Node (Leaf, 0, Leaf)),
+                      3,
+                      Node (Leaf, 0, Leaf) ),
+                  2 ),
+                Node
+                  (Node (Leaf, 2, Node (Leaf, 0, Leaf)), 3, Node (Leaf, 0, Leaf))
+              );
+              ( ( Node
+                    ( Node (Leaf, 0, Leaf),
+                      0,
+                      Node (Node (Leaf, 3, Leaf), 0, Leaf) ),
+                  0 ),
+                Node
+                  (Node (Leaf, 0, Leaf), 0, Node (Node (Leaf, 3, Leaf), 0, Leaf))
+              );
+              ( (Node (Node (Leaf, 1, Leaf), 2, Node (Leaf, 0, Leaf)), 0),
+                Node
+                  (Node (Node (Leaf, 0, Leaf), 1, Leaf), 2, Node (Leaf, 0, Leaf))
+              );
+              ( (Node (Node (Leaf, 0, Leaf), 1, Node (Leaf, 1, Leaf)), 1),
+                Node (Node (Leaf, 0, Leaf), 1, Node (Leaf, 1, Leaf)) );
+              ( ( Node
+                    ( Node (Leaf, 0, Leaf),
+                      1,
+                      Node (Node (Leaf, 1, Leaf), 1, Leaf) ),
+                  0 ),
+                Node
+                  (Node (Leaf, 0, Leaf), 1, Node (Node (Leaf, 1, Leaf), 1, Leaf))
+              );
+            ];
+          func = let f : int Tree2.t * int -> int Tree2.t = fun (tree, y) -> Tree2.binsert y tree in f;
+        } ) ;
+    ( "tree_collect_leaves" ,
+      proj
+        {
+          function_name = "tree_collect_leaves" ;
+          k_max = 20 ;
+          d_in = Denotation.arg1 (Denotation.tree Denotation.bool) ;
+          d_out = Denotation.list Denotation.bool ;
+          expert = [];
+          assertion =
+            [
+              ( Node
+                  ( Leaf,
+                    false,
+                    Node
+                      ( Node
+                          ( Leaf,
+                            true,
+                            Node
+                              ( Node (Leaf, false, Node (Leaf, true, Leaf)),
+                                true,
+                                Leaf ) ),
+                        false,
+                        Leaf ) ),
+                [ false; true; false; true; true; false ] );
+              (Leaf, []);
+              ( Node (Leaf, true, Node (Node (Leaf, true, Leaf), false, Leaf)),
+                [ true; true; false ] );
+              ( Node
+                  ( Leaf,
+                    false,
+                    Node
+                      ( Leaf,
+                        true,
+                        Node
+                          ( Leaf,
+                            true,
+                            Node (Leaf, true, Node (Leaf, true, Leaf)) ) ) ),
+                [ false; true; true; true; true ] );
+              ( Node
+                  ( Node
+                      ( Node
+                          ( Node (Node (Leaf, false, Leaf), true, Leaf),
+                            true,
+                            Node (Leaf, false, Leaf) ),
+                        false,
+                        Leaf ),
+                    true,
+                    Leaf ),
+                [ false; true; true; false; false; true ] );
+              ( Node
+                  ( Leaf,
+                    true,
+                    Node
+                      ( Node
+                          ( Node
+                              ( Leaf,
+                                true,
+                                Node (Node (Leaf, true, Leaf), true, Leaf) ),
+                            false,
+                            Leaf ),
+                        true,
+                        Leaf ) ),
+                [ true; true; true; true; false; true ] );
+              ( Node
+                  ( Node
+                      (Node (Node (Leaf, true, Leaf), false, Leaf), true, Leaf),
+                    true,
+                    Leaf ),
+                [ true; false; true; true ] );
+              ( Node
+                  ( Node (Leaf, true, Node (Leaf, false, Leaf)),
+                    true,
+                    Node (Node (Node (Leaf, true, Leaf), true, Leaf), true, Leaf)
+                  ),
+                [ true; false; true; true; true; true ] );
+              ( Node
+                  ( Leaf,
+                    false,
+                    Node
+                      ( Node
+                          ( Leaf,
+                            false,
+                            Node (Node (Leaf, true, Leaf), true, Leaf) ),
+                        false,
+                        Leaf ) ),
+                [ false; false; true; true; false ] );
+              ( Node
+                  ( Node
+                      (Leaf, false, Node (Node (Leaf, true, Leaf), true, Leaf)),
+                    true,
+                    Node (Leaf, true, Leaf) ),
+                [ false; true; true; true; true ] );
+              ( Node
+                  ( Leaf,
+                    true,
+                    Node
+                      ( Node
+                          ( Leaf,
+                            false,
+                            Node
+                              ( Node (Leaf, false, Leaf),
+                                true,
+                                Node (Leaf, false, Leaf) ) ),
+                        true,
+                        Leaf ) ),
+                [ true; false; false; true; false; true ] );
+              ( Node
+                  ( Node (Node (Leaf, false, Leaf), true, Leaf),
+                    true,
+                    Node (Node (Leaf, false, Leaf), true, Leaf) ),
+                [ false; true; true; false; true ] );
+              ( Node
+                  ( Node (Node (Leaf, true, Leaf), true, Leaf),
+                    false,
+                    Node
+                      (Node (Leaf, true, Leaf), false, Node (Leaf, true, Leaf))
+                  ),
+                [ true; true; false; true; false; true ] );
+              ( Node
+                  ( Node (Leaf, false, Leaf),
+                    true,
+                    Node
+                      ( Node
+                          ( Node (Leaf, true, Node (Leaf, false, Leaf)),
+                            false,
+                            Leaf ),
+                        true,
+                        Leaf ) ),
+                [ false; true; true; false; false; true ] );
+              ( Node
+                  ( Leaf,
+                    true,
+                    Node
+                      ( Node
+                          ( Leaf,
+                            true,
+                            Node (Leaf, true, Node (Leaf, true, Leaf)) ),
+                        true,
+                        Node (Leaf, false, Leaf) ) ),
+                [ true; true; true; true; true; false ] );
+              ( Node
+                  ( Node
+                      ( Node
+                          ( Node
+                              ( Node (Leaf, true, Leaf),
+                                false,
+                                Node (Leaf, false, Leaf) ),
+                            false,
+                            Leaf ),
+                        true,
+                        Leaf ),
+                    true,
+                    Leaf ),
+                [ true; false; false; false; true; true ] );
+              ( Node
+                  ( Leaf,
+                    false,
+                    Node
+                      (Leaf, false, Node (Leaf, true, Node (Leaf, true, Leaf)))
+                  ),
+                [ false; false; true; true ] );
+              ( Node
+                  ( Leaf,
+                    true,
+                    Node
+                      ( Leaf,
+                        false,
+                        Node
+                          ( Node (Node (Leaf, false, Leaf), true, Leaf),
+                            false,
+                            Leaf ) ) ),
+                [ true; false; false; true; false ] );
+              ( Node
+                  ( Node
+                      ( Leaf,
+                        true,
+                        Node
+                          ( Leaf,
+                            true,
+                            Node (Leaf, true, Node (Leaf, false, Leaf)) ) ),
+                    false,
+                    Leaf ),
+                [ true; true; true; false; false ] );
+              ( Node
+                  ( Node (Leaf, false, Leaf),
+                    true,
+                    Node (Node (Leaf, false, Leaf), false, Leaf) ),
+                [ false; true; false; false ] );
+            ];
+          func = let f : bool Tree2.t -> bool list = fun tree -> Tree2.in_order tree in f
+        } ) ;
+    ( "tree_count_leaves" ,
+      proj
+        {
+          function_name = "tree_count_leaves" ;
+          k_max = 15 ;
+          d_in = Denotation.arg1 (Denotation.tree Denotation.bool) ;
+          d_out = Denotation.int ; 
+          expert = [];
+          assertion =
+            [
+              (Leaf, 1);
+              ( Node (Node (Leaf, false, Node (Leaf, true, Leaf)), false, Leaf),
+                4 );
+              ( Node
+                  ( Node
+                      ( Node
+                          ( Leaf,
+                            true,
+                            Node (Leaf, false, Node (Leaf, true, Leaf)) ),
+                        false,
+                        Node (Leaf, false, Leaf) ),
+                    false,
+                    Leaf ),
+                7 );
+              ( Node
+                  ( Leaf,
+                    false,
+                    Node
+                      ( Node
+                          ( Node
+                              ( Node (Leaf, true, Leaf),
+                                true,
+                                Node (Leaf, true, Leaf) ),
+                            false,
+                            Leaf ),
+                        false,
+                        Leaf ) ),
+                7 );
+              ( Node
+                  ( Leaf,
+                    true,
+                    Node
+                      ( Leaf,
+                        true,
+                        Node
+                          ( Node (Node (Leaf, false, Leaf), false, Leaf),
+                            true,
+                            Node (Leaf, true, Leaf) ) ) ),
+                7 );
+              ( Node
+                  ( Node
+                      ( Node
+                          ( Node (Node (Leaf, true, Leaf), true, Leaf),
+                            true,
+                            Node (Leaf, false, Leaf) ),
+                        false,
+                        Leaf ),
+                    false,
+                    Leaf ),
+                7 );
+              ( Node
+                  ( Leaf,
+                    true,
+                    Node
+                      ( Node
+                          ( Leaf,
+                            false,
+                            Node
+                              ( Node (Leaf, true, Node (Leaf, true, Leaf)),
+                                false,
+                                Leaf ) ),
+                        false,
+                        Leaf ) ),
+                7 );
+              ( Node
+                  ( Node
+                      ( Leaf,
+                        false,
+                        Node
+                          ( Leaf,
+                            true,
+                            Node (Leaf, false, Node (Leaf, false, Leaf)) ) ),
+                    true,
+                    Node (Leaf, true, Leaf) ),
+                7 );
+              ( Node
+                  ( Node (Leaf, true, Leaf),
+                    false,
+                    Node
+                      ( Node
+                          ( Node (Node (Leaf, true, Leaf), true, Leaf),
+                            true,
+                            Leaf ),
+                        false,
+                        Leaf ) ),
+                7 );
+              ( Node
+                  ( Leaf,
+                    false,
+                    Node
+                      ( Node
+                          ( Leaf,
+                            false,
+                            Node
+                              ( Node (Node (Leaf, true, Leaf), false, Leaf),
+                                true,
+                                Leaf ) ),
+                        false,
+                        Leaf ) ),
+                7 );
+              ( Node
+                  ( Node
+                      ( Node
+                          ( Node (Leaf, true, Node (Leaf, true, Leaf)),
+                            false,
+                            Leaf ),
+                        false,
+                        Leaf ),
+                    true,
+                    Node (Leaf, false, Leaf) ),
+                7 );
+              ( Node
+                  ( Node
+                      ( Leaf,
+                        true,
+                        Node
+                          ( Node (Node (Leaf, true, Leaf), true, Leaf),
+                            false,
+                            Node (Leaf, true, Leaf) ) ),
+                    true,
+                    Leaf ),
+                7 );
+              ( Node
+                  ( Leaf,
+                    true,
+                    Node
+                      ( Node
+                          ( Node (Leaf, false, Node (Leaf, false, Leaf)),
+                            true,
+                            Leaf ),
+                        true,
+                        Node (Leaf, true, Leaf) ) ),
+                7 );
+              ( Node
+                  ( Node (Leaf, false, Leaf),
+                    true,
+                    Node
+                      ( Node
+                          ( Node (Node (Leaf, true, Leaf), false, Leaf),
+                            true,
+                            Leaf ),
+                        true,
+                        Leaf ) ),
+                7 );
+              ( Node
+                  ( Node
+                      ( Leaf,
+                        false,
+                        Node
+                          ( Node (Leaf, true, Node (Leaf, true, Leaf)),
+                            true,
+                            Leaf ) ),
+                    false,
+                    Node (Leaf, true, Leaf) ),
+                7 );
+            ];
+          func = let f : bool Tree2.t -> int = fun tree -> Tree2.count_leaves tree in f
+        } ) ;
+    ( "tree_count_nodes" ,
+      proj
+        {
+          function_name = "tree_count_nodes" ;
+          k_max = 15 ;
+          d_in = Denotation.arg1 (Denotation.tree Denotation.int) ;
+          d_out = Denotation.int ;
+          expert = [];
+          assertion =
+            [
+              (Leaf, 0);
+              ( Node
+                  (Node (Leaf, 1, Leaf), 0, Node (Leaf, 2, Node (Leaf, 3, Leaf))),
+                4 );
+              ( Node
+                  (Leaf, 3, Node (Leaf, 2, Node (Leaf, 1, Node (Leaf, 0, Leaf)))),
+                4 );
+              ( Node
+                  (Leaf, 1, Node (Node (Node (Leaf, 1, Leaf), 1, Leaf), 3, Leaf)),
+                4 );
+              ( Node
+                  (Node (Leaf, 0, Node (Leaf, 0, Leaf)), 2, Node (Leaf, 2, Leaf)),
+                4 );
+              (Node (Node (Leaf, 0, Leaf), 2, Leaf), 2);
+              ( Node
+                  (Node (Leaf, 2, Node (Node (Leaf, 1, Leaf), 2, Leaf)), 0, Leaf),
+                4 );
+              (Node (Leaf, 2, Node (Leaf, 0, Leaf)), 2);
+              ( Node
+                  (Node (Leaf, 1, Node (Leaf, 0, Node (Leaf, 1, Leaf))), 0, Leaf),
+                4 );
+              (Node (Node (Leaf, 1, Leaf), 3, Node (Leaf, 0, Leaf)), 3);
+              ( Node
+                  (Leaf, 1, Node (Leaf, 1, Node (Leaf, 3, Node (Leaf, 1, Leaf)))),
+                4 );
+              ( Node
+                  (Node (Node (Leaf, 3, Leaf), 3, Leaf), 1, Node (Leaf, 0, Leaf)),
+                4 );
+              (Node (Node (Leaf, 0, Leaf), 3, Node (Leaf, 3, Leaf)), 3);
+              ( Node
+                  (Leaf, 1, Node (Node (Leaf, 3, Leaf), 1, Node (Leaf, 0, Leaf))),
+                4 );
+              ( Node
+                  (Leaf, 3, Node (Node (Leaf, 2, Node (Leaf, 2, Leaf)), 0, Leaf)),
+                4 );
+            ];
+          func = let f : int Tree2.t -> int = fun tree -> Tree2.count_nodes tree in f
+        } ) ;
+    ( "tree_inorder" ,
+      proj
+        {
+          function_name = "tree_inorder" ;
+          k_max = 15 ;
+          d_in = Denotation.arg1 (Denotation.tree Denotation.int) ;
+          d_out = Denotation.list Denotation.int ;
+          expert = [];
+          assertion =
+            [
+              (Leaf, []);
+              ( Node
+                  (Node (Node (Leaf, 3, Node (Leaf, 2, Leaf)), 1, Leaf), 2, Leaf),
+                [ 3; 2; 1; 2 ] );
+              ( Node
+                  (Node (Leaf, 1, Node (Leaf, 0, Node (Leaf, 1, Leaf))), 1, Leaf),
+                [ 1; 0; 1; 1 ] );
+              ( Node
+                  (Leaf, 3, Node (Node (Leaf, 3, Leaf), 3, Node (Leaf, 0, Leaf))),
+                [ 3; 3; 3; 0 ] );
+              (Node (Leaf, 0, Leaf), [ 0 ]);
+              ( Node
+                  (Leaf, 3, Node (Node (Leaf, 1, Node (Leaf, 2, Leaf)), 1, Leaf)),
+                [ 3; 1; 2; 1 ] );
+              ( Node
+                  (Node (Node (Leaf, 1, Node (Leaf, 2, Leaf)), 0, Leaf), 2, Leaf),
+                [ 1; 2; 0; 2 ] );
+              ( Node
+                  (Node (Leaf, 1, Node (Node (Leaf, 0, Leaf), 0, Leaf)), 1, Leaf),
+                [ 1; 0; 0; 1 ] );
+              ( Node
+                  (Leaf, 1, Node (Leaf, 1, Node (Node (Leaf, 2, Leaf), 0, Leaf))),
+                [ 1; 1; 2; 0 ] );
+              ( Node
+                  (Leaf, 2, Node (Node (Node (Leaf, 1, Leaf), 3, Leaf), 2, Leaf)),
+                [ 2; 1; 3; 2 ] );
+              ( Node
+                  (Node (Node (Leaf, 1, Node (Leaf, 2, Leaf)), 1, Leaf), 0, Leaf),
+                [ 1; 2; 1; 0 ] );
+              ( Node
+                  (Leaf, 3, Node (Node (Node (Leaf, 2, Leaf), 1, Leaf), 1, Leaf)),
+                [ 3; 2; 1; 1 ] );
+              (Node (Node (Leaf, 1, Leaf), 0, Node (Leaf, 0, Leaf)), [ 1; 0; 0 ]);
+              (Node (Node (Leaf, 2, Node (Leaf, 1, Leaf)), 3, Leaf), [ 2; 1; 3 ]);
+              ( Node
+                  (Leaf, 2, Node (Node (Leaf, 3, Node (Leaf, 0, Leaf)), 1, Leaf)),
+                [ 2; 3; 0; 1 ] );
+            ];
+          func = let f : int Tree2.t -> int list = fun tree -> Tree2.in_order tree in f
+        } ) ;
+    ( "tree_map" ,
+      proj
+        {
+          function_name = "tree_map" ;
+          k_max = 20 ;
+          d_in = Denotation.args2 Denotation.var (Denotation.tree Denotation.int) ;
+          d_out = Denotation.tree Denotation.int ;
+          expert = [];
+          assertion =
+            [
+              (("div2", Leaf), Leaf);
+              ( ( "div2",
+                  Node
+                    ( Node (Leaf, 3, Node (Node (Leaf, 1, Leaf), 2, Leaf)),
+                      0,
+                      Leaf ) ),
+                Node
+                  (Node (Leaf, 1, Node (Node (Leaf, 0, Leaf), 1, Leaf)), 0, Leaf)
+              );
+              ( ("div2", Node (Node (Leaf, 1, Node (Leaf, 0, Leaf)), 1, Leaf)),
+                Node (Node (Leaf, 0, Node (Leaf, 0, Leaf)), 0, Leaf) );
+              ( ( "div2",
+                  Node
+                    ( Node (Node (Leaf, 0, Node (Leaf, 3, Leaf)), 3, Leaf),
+                      1,
+                      Leaf ) ),
+                Node
+                  (Node (Node (Leaf, 0, Node (Leaf, 1, Leaf)), 1, Leaf), 0, Leaf)
+              );
+              ( ("div2", Node (Leaf, 3, Node (Node (Leaf, 1, Leaf), 1, Leaf))),
+                Node (Leaf, 1, Node (Node (Leaf, 0, Leaf), 0, Leaf)) );
+              ( ( "div2",
+                  Node
+                    ( Node (Node (Leaf, 0, Leaf), 0, Leaf),
+                      1,
+                      Node (Leaf, 0, Leaf) ) ),
+                Node
+                  (Node (Node (Leaf, 0, Leaf), 0, Leaf), 0, Node (Leaf, 0, Leaf))
+              );
+              ( ( "div2",
+                  Node
+                    ( Node (Node (Node (Leaf, 2, Leaf), 3, Leaf), 1, Leaf),
+                      1,
+                      Leaf ) ),
+                Node
+                  (Node (Node (Node (Leaf, 1, Leaf), 1, Leaf), 0, Leaf), 0, Leaf)
+              );
+              (("div2", Node (Leaf, 0, Leaf)), Node (Leaf, 0, Leaf));
+              ( ( "inc",
+                  Node
+                    ( Node (Leaf, 1, Node (Node (Leaf, 2, Leaf), 3, Leaf)),
+                      0,
+                      Leaf ) ),
+                Node
+                  (Node (Leaf, 2, Node (Node (Leaf, 3, Leaf), 4, Leaf)), 1, Leaf)
+              );
+              ( ( "div2",
+                  Node
+                    ( Node (Leaf, 3, Leaf),
+                      2,
+                      Node (Node (Leaf, 2, Leaf), 1, Leaf) ) ),
+                Node
+                  (Node (Leaf, 1, Leaf), 1, Node (Node (Leaf, 1, Leaf), 0, Leaf))
+              );
+              ( ( "div2",
+                  Node
+                    ( Leaf,
+                      1,
+                      Node (Leaf, 2, Node (Node (Leaf, 1, Leaf), 2, Leaf)) ) ),
+                Node
+                  (Leaf, 0, Node (Leaf, 1, Node (Node (Leaf, 0, Leaf), 1, Leaf)))
+              );
+              (("inc", Node (Leaf, 1, Leaf)), Node (Leaf, 2, Leaf));
+              ( ( "div2",
+                  Node
+                    ( Leaf,
+                      1,
+                      Node (Leaf, 0, Node (Node (Leaf, 2, Leaf), 0, Leaf)) ) ),
+                Node
+                  (Leaf, 0, Node (Leaf, 0, Node (Node (Leaf, 1, Leaf), 0, Leaf)))
+              );
+              ( ( "div2",
+                  Node
+                    ( Node (Leaf, 0, Leaf),
+                      1,
+                      Node (Leaf, 0, Node (Leaf, 0, Leaf)) ) ),
+                Node
+                  (Node (Leaf, 0, Leaf), 0, Node (Leaf, 0, Node (Leaf, 0, Leaf)))
+              );
+              ( ("div2", Node (Node (Node (Leaf, 1, Leaf), 0, Leaf), 2, Leaf)),
+                Node (Node (Node (Leaf, 0, Leaf), 0, Leaf), 1, Leaf) );
+              ( ( "div2",
+                  Node
+                    ( Leaf,
+                      3,
+                      Node (Node (Leaf, 1, Node (Leaf, 0, Leaf)), 0, Leaf) ) ),
+                Node
+                  (Leaf, 1, Node (Node (Leaf, 0, Node (Leaf, 0, Leaf)), 0, Leaf))
+              );
+              ( ( "inc",
+                  Node
+                    ( Node (Leaf, 3, Leaf),
+                      0,
+                      Node (Node (Leaf, 0, Leaf), 2, Leaf) ) ),
+                Node
+                  (Node (Leaf, 4, Leaf), 1, Node (Node (Leaf, 1, Leaf), 3, Leaf))
+              );
+              ( ("inc", Node (Node (Leaf, 1, Node (Leaf, 0, Leaf)), 2, Leaf)),
+                Node (Node (Leaf, 2, Node (Leaf, 1, Leaf)), 3, Leaf) );
+              ( ( "inc",
+                  Node
+                    ( Leaf,
+                      0,
+                      Node (Leaf, 1, Node (Node (Leaf, 1, Leaf), 1, Leaf)) ) ),
+                Node
+                  (Leaf, 1, Node (Leaf, 2, Node (Node (Leaf, 2, Leaf), 2, Leaf)))
+              );
+              ( ( "div2",
+                  Node
+                    ( Leaf,
+                      3,
+                      Node (Node (Node (Leaf, 3, Leaf), 2, Leaf), 3, Leaf) ) ),
+                Node
+                  (Leaf, 1, Node (Node (Node (Leaf, 1, Leaf), 1, Leaf), 1, Leaf))
+              );
+            ];
+          func = let f : string * int Tree2.t -> int Tree2.t =
+                   fun (fname, t) ->
+                     let mapper =
+                       match fname with
+                       | "div2" -> fun x -> x / 2
+                       | "inc" -> fun x -> x + 1
+                       | _ -> failwith ("Unknown Myth built-in '" ^
+                                        fname ^ "'") in Tree2.map mapper t in f
+        } ) ;
+    ( "tree_nodes_at_level" ,
+      proj
+        {
+          function_name = "tree_nodes_at_level" ;
+          k_max = 20 ;
+          d_in = Denotation.args2 Denotation.int (Denotation.tree Denotation.bool) ;
+          d_out = Denotation.int ; 
+          expert = [];
+          assertion =
+            [
+              ((0, Leaf), 0);
+              ( ( 1,
+                  Node
+                    ( Leaf,
+                      true,
+                      Node
+                        (Leaf, false, Node (Node (Leaf, true, Leaf), true, Leaf))
+                    ) ),
+                1 );
+              ( ( 1,
+                  Node
+                    ( Node
+                        ( Leaf,
+                          false,
+                          Node
+                            ( Node
+                                ( Leaf,
+                                  true,
+                                  Node (Node (Leaf, true, Leaf), true, Leaf) ),
+                              false,
+                              Leaf ) ),
+                      false,
+                      Leaf ) ),
+                1 );
+              ( ( 0,
+                  Node
+                    ( Leaf,
+                      false,
+                      Node
+                        ( Node (Leaf, false, Leaf),
+                          true,
+                          Node (Leaf, false, Leaf) ) ) ),
+                1 );
+              ( ( 3,
+                  Node
+                    ( Leaf,
+                      true,
+                      Node
+                        ( Node
+                            ( Node (Leaf, false, Node (Leaf, false, Leaf)),
+                              false,
+                              Node (Leaf, false, Leaf) ),
+                          true,
+                          Leaf ) ) ),
+                2 );
+              ( ( 1,
+                  Node
+                    ( Leaf,
+                      false,
+                      Node
+                        ( Node
+                            ( Node (Leaf, false, Leaf),
+                              false,
+                              Node (Leaf, true, Leaf) ),
+                          true,
+                          Node (Leaf, false, Leaf) ) ) ),
+                1 );
+              ( ( 2,
+                  Node
+                    ( Leaf,
+                      true,
+                      Node
+                        ( Node
+                            ( Node (Leaf, false, Leaf),
+                              true,
+                              Node (Leaf, true, Leaf) ),
+                          true,
+                          Node (Leaf, false, Leaf) ) ) ),
+                2 );
+              ( ( 2,
+                  Node
+                    ( Leaf,
+                      true,
+                      Node
+                        ( Node
+                            ( Node
+                                ( Leaf,
+                                  false,
+                                  Node (Node (Leaf, false, Leaf), false, Leaf)
+                                ),
+                              false,
+                              Leaf ),
+                          false,
+                          Leaf ) ) ),
+                1 );
+              ( ( 2,
+                  Node
+                    ( Leaf,
+                      false,
+                      Node
+                        ( Node
+                            ( Node
+                                ( Node (Node (Leaf, false, Leaf), false, Leaf),
+                                  true,
+                                  Leaf ),
+                              true,
+                              Leaf ),
+                          true,
+                          Leaf ) ) ),
+                1 );
+              ( ( 1,
+                  Node
+                    ( Leaf,
+                      false,
+                      Node
+                        ( Node
+                            ( Leaf,
+                              false,
+                              Node
+                                ( Node (Leaf, false, Leaf),
+                                  false,
+                                  Node (Leaf, false, Leaf) ) ),
+                          true,
+                          Leaf ) ) ),
+                1 );
+              ( ( 1,
+                  Node
+                    ( Node
+                        ( Leaf,
+                          false,
+                          Node
+                            ( Node
+                                ( Leaf,
+                                  false,
+                                  Node (Node (Leaf, true, Leaf), false, Leaf) ),
+                              true,
+                              Leaf ) ),
+                      true,
+                      Leaf ) ),
+                1 );
+              ( ( 0,
+                  Node
+                    ( Node
+                        ( Node (Node (Leaf, false, Leaf), false, Leaf),
+                          false,
+                          Leaf ),
+                      false,
+                      Node (Node (Leaf, false, Leaf), false, Leaf) ) ),
+                1 );
+              ( ( 2,
+                  Node
+                    ( Leaf,
+                      false,
+                      Node
+                        ( Node
+                            ( Leaf,
+                              true,
+                              Node (Leaf, false, Node (Leaf, false, Leaf)) ),
+                          false,
+                          Leaf ) ) ),
+                1 );
+              ( ( 0,
+                  Node
+                    ( Leaf,
+                      true,
+                      Node
+                        ( Leaf,
+                          false,
+                          Node
+                            ( Leaf,
+                              true,
+                              Node
+                                ( Node (Node (Leaf, true, Leaf), false, Leaf),
+                                  true,
+                                  Leaf ) ) ) ) ),
+                1 );
+              ( ( 0,
+                  Node
+                    ( Node
+                        (Node (Node (Leaf, true, Leaf), false, Leaf), true, Leaf),
+                      true,
+                      Leaf ) ),
+                1 );
+              ( ( 2,
+                  Node
+                    ( Node
+                        ( Leaf,
+                          true,
+                          Node
+                            ( Leaf,
+                              true,
+                              Node (Leaf, false, Node (Leaf, true, Leaf)) ) ),
+                      true,
+                      Node (Leaf, false, Leaf) ) ),
+                1 );
+              ( ( 1,
+                  Node
+                    ( Node
+                        ( Leaf,
+                          false,
+                          Node
+                            ( Node (Leaf, false, Node (Leaf, false, Leaf)),
+                              false,
+                              Node (Leaf, true, Leaf) ) ),
+                      true,
+                      Leaf ) ),
+                1 );
+              ( ( 0,
+                  Node
+                    ( Leaf,
+                      false,
+                      Node
+                        ( Node
+                            ( Node (Leaf, false, Leaf),
+                              false,
+                              Node (Leaf, true, Node (Leaf, true, Leaf)) ),
+                          false,
+                          Leaf ) ) ),
+                1 );
+              ( ( 1,
+                  Node
+                    ( Leaf,
+                      true,
+                      Node
+                        ( Node
+                            ( Node (Leaf, true, Leaf),
+                              true,
+                              Node (Leaf, false, Leaf) ),
+                          true,
+                          Leaf ) ) ),
+                1 );
+              ( ( 2,
+                  Node
+                    ( Node (Leaf, true, Node (Leaf, true, Leaf)),
+                      false,
+                      Node
+                        (Node (Leaf, true, Node (Leaf, true, Leaf)), true, Leaf)
+                    ) ),
+                2 );
+            ];
+          func = let f : int * bool Tree2.t -> int =
+                   fun (level, tree) -> Tree2.count_nodes_at_level level tree in f
+        } ) ;
+    ( "tree_postorder" ,
+      proj
+        {
+          function_name = "tree_postorder" ;
+          k_max = 20 ;
+          d_in = Denotation.arg1 @@ Denotation.tree Denotation.int ;
+          d_out = Denotation.list Denotation.int ;
+          expert = [];
+          assertion =
+            [
+              (Leaf, []);
+              ( Node
+                  (Leaf, 2, Node (Node (Node (Leaf, 3, Leaf), 2, Leaf), 1, Leaf)),
+                [ 3; 2; 1; 2 ] );
+              (Node (Leaf, 0, Leaf), [ 0 ]);
+              ( Node
+                  (Node (Node (Leaf, 2, Leaf), 1, Leaf), 1, Node (Leaf, 2, Leaf)),
+                [ 2; 1; 2; 1 ] );
+              (Node (Node (Leaf, 2, Leaf), 2, Leaf), [ 2; 2 ]);
+              ( Node
+                  (Node (Leaf, 1, Node (Leaf, 1, Leaf)), 0, Node (Leaf, 0, Leaf)),
+                [ 1; 1; 0; 0 ] );
+              (Node (Node (Node (Leaf, 0, Leaf), 1, Leaf), 3, Leaf), [ 0; 1; 3 ]);
+              ( Node
+                  (Node (Node (Leaf, 3, Leaf), 0, Leaf), 2, Node (Leaf, 0, Leaf)),
+                [ 3; 0; 0; 2 ] );
+              ( Node
+                  (Node (Leaf, 1, Node (Leaf, 2, Node (Leaf, 1, Leaf))), 1, Leaf),
+                [ 1; 2; 1; 1 ] );
+              (Node (Node (Leaf, 1, Leaf), 3, Node (Leaf, 0, Leaf)), [ 1; 0; 3 ]);
+              (Node (Leaf, 0, Node (Node (Leaf, 2, Leaf), 2, Leaf)), [ 2; 2; 0 ]);
+              ( Node
+                  (Node (Leaf, 2, Node (Node (Leaf, 1, Leaf), 0, Leaf)), 1, Leaf),
+                [ 1; 0; 2; 1 ] );
+              ( Node
+                  (Node (Node (Leaf, 0, Leaf), 3, Leaf), 1, Node (Leaf, 1, Leaf)),
+                [ 0; 3; 1; 1 ] );
+              ( Node
+                  (Leaf, 0, Node (Node (Leaf, 1, Leaf), 3, Node (Leaf, 3, Leaf))),
+                [ 1; 3; 3; 0 ] );
+              (Node (Node (Leaf, 2, Node (Leaf, 2, Leaf)), 1, Leaf), [ 2; 2; 1 ]);
+              ( Node
+                  (Leaf, 2, Node (Node (Leaf, 0, Node (Leaf, 0, Leaf)), 1, Leaf)),
+                [ 0; 0; 1; 2 ] );
+              (Node (Node (Leaf, 3, Leaf), 3, Node (Leaf, 0, Leaf)), [ 3; 0; 3 ]);
+              ( Node
+                  (Node (Node (Leaf, 2, Leaf), 0, Node (Leaf, 0, Leaf)), 3, Leaf),
+                [ 2; 0; 0; 3 ] );
+              (Node (Leaf, 3, Node (Node (Leaf, 2, Leaf), 0, Leaf)), [ 2; 0; 3 ]);
+              ( Node
+                  (Node (Leaf, 3, Node (Node (Leaf, 1, Leaf), 0, Leaf)), 2, Leaf),
+                [ 1; 0; 3; 2 ] );
+            ];
+          func = let f : int Tree2.t -> int list =
+                   fun tree -> Tree2.post_order tree in f
+        } ) ;
+    ( "tree_preorder" ,
+      proj
+        {
+          function_name = "tree_preorder" ;
+          k_max = 15 ;
+          d_in = Denotation.arg1 @@ Denotation.tree Denotation.int ;
+          d_out = Denotation.list Denotation.int ;
+          expert = [];
+          assertion =
+            [
+              (Leaf, []);
+              ( Node
+                  (Leaf, 1, Node (Node (Leaf, 2, Leaf), 1, Node (Leaf, 0, Leaf))),
+                [ 1; 1; 2; 0 ] );
+              (Node (Leaf, 2, Node (Node (Leaf, 1, Leaf), 2, Leaf)), [ 2; 2; 1 ]);
+              (Node (Leaf, 2, Node (Leaf, 1, Node (Leaf, 3, Leaf))), [ 2; 1; 3 ]);
+              (Node (Node (Node (Leaf, 1, Leaf), 3, Leaf), 3, Leaf), [ 3; 3; 1 ]);
+              ( Node
+                  (Node (Node (Leaf, 2, Node (Leaf, 1, Leaf)), 3, Leaf), 2, Leaf),
+                [ 2; 3; 2; 1 ] );
+              (Node (Node (Leaf, 3, Leaf), 0, Leaf), [ 0; 3 ]);
+              (Node (Leaf, 1, Node (Node (Leaf, 2, Leaf), 0, Leaf)), [ 1; 0; 2 ]);
+              ( Node
+                  (Node (Leaf, 2, Leaf), 3, Node (Leaf, 0, Node (Leaf, 3, Leaf))),
+                [ 3; 2; 0; 3 ] );
+              ( Node
+                  (Node (Leaf, 3, Leaf), 3, Node (Leaf, 1, Node (Leaf, 1, Leaf))),
+                [ 3; 3; 1; 1 ] );
+              (Node (Node (Leaf, 2, Node (Leaf, 3, Leaf)), 2, Leaf), [ 2; 2; 3 ]);
+              ( Node
+                  (Node (Node (Leaf, 0, Leaf), 1, Leaf), 1, Node (Leaf, 0, Leaf)),
+                [ 1; 1; 0; 0 ] );
+              (Node (Leaf, 1, Node (Node (Leaf, 2, Leaf), 2, Leaf)), [ 1; 2; 2 ]);
+              ( Node
+                  (Node (Node (Leaf, 2, Leaf), 1, Node (Leaf, 0, Leaf)), 0, Leaf),
+                [ 0; 1; 2; 0 ] );
+              ( Node
+                  (Leaf, 0, Node (Node (Leaf, 1, Node (Leaf, 2, Leaf)), 0, Leaf)),
+                [ 0; 0; 1; 2 ] );
+            ];
+          func = let f : int Tree2.t -> int list =
+                   fun tree -> Tree2.pre_order tree in f
         } )
-    (* ; ( "nat_iseven" , proj { function_name = "isEven" ; k_max = 4 ; d_in =
-       Denotation.int ; d_out = Denotation.bool ;  func =
-       let rec f : int -> bool = fun x -> if x = 0 then true else if x = 1 then
-       false else f (x - 2) in f } ) ; ( "nat_max" , proj { function_name =
-       "natMax" ; k_max = 15 ; d_in = Denotation.args2 Denotation.int
-       Denotation.int ; d_out = Denotation.int ; input = Sample2.pair
-       Sample2.nat Sample2.nat ; func = let f : int * int -> int = fun (x, y) ->
-       if x >= y then x else y in f } ) ; ( "nat_pred" , proj { function_name =
-       "natPred" ; k_max = 4 ; d_in = Denotation.int ; d_out = Denotation.int ;
-        func = let f : int -> int = fun x -> if x = 0 then
-       0 else x - 1 in f } ) ; ( "nat_add" , proj { function_name = "natAdd" ;
-       k_max = 9 ; d_in = Denotation.args2 Denotation.int Denotation.int ; d_out
-       = Denotation.int ;  func =
-       let f : int * int -> int = fun (x, y) -> x + y in f } ) ; (
-       "tree_binsert" , proj { function_name = "treeBInsert" ; k_max = 20 ; d_in
-       = Denotation.args2 Denotation.int (Denotation.tree Denotation.int) ;
-       d_out = Denotation.tree Denotation.int ; input = Sample2.pair Sample2.nat
-       Sample2.nat_tree ; func = let f : int * int Tree2.t -> int Tree2.t = fun
-       (y, tree) -> Tree2.binsert y tree in f } ) ; ( "tree_collect_leaves" ,
-       proj { function_name = "treeCollectLeaves" ; k_max = 20 ; d_in =
-       Denotation.tree Denotation.bool ; d_out = Denotation.list Denotation.bool
-       ;  func = let f : bool Tree2.t -> bool list =
-       fun tree -> Tree2.in_order tree in f } ) ; ( "tree_count_leaves" , proj {
-       function_name = "treeCountLeaves" ; k_max = 15 ; d_in = Denotation.tree
-       Denotation.bool ; d_out = Denotation.int ; 
-       func = let f : bool Tree2.t -> int = fun tree -> Tree2.count_leaves tree
-       in f } ) ; ( "tree_count_nodes" , proj { function_name = "treeCountNodes"
-       ; k_max = 15 ; d_in = Denotation.tree Denotation.int ; d_out =
-       Denotation.int ;  func = let f : int Tree2.t ->
-       int = fun tree -> Tree2.count_nodes tree in f } ) ; ( "tree_inorder" ,
-       proj { function_name = "treeInOrder" ; k_max = 15 ; d_in =
-       Denotation.tree Denotation.int ; d_out = Denotation.list Denotation.int ;
-        func = let f : int Tree2.t -> int list = fun
-       tree -> Tree2.in_order tree in f } ) ; ( "tree_map" , proj {
-       function_name = "treeMap" ; k_max = 20 ; d_in = Denotation.args2
-       Denotation.var (Denotation.tree Denotation.int) ; d_out = Denotation.tree
-       Denotation.int ; input = Sample2.pair (Sample2.from ("div2", ["inc"]))
-       Sample2.nat_tree ; func = let f : string * int Tree2.t -> int Tree2.t =
-       fun (fname, t) -> let mapper = match fname with | "div2" -> fun x -> x /
-       2 | "inc" -> fun x -> x + 1 | _ -> failwith ("Unknown Myth built-in '" ^
-       fname ^ "'") in Tree2.map mapper t in f } ) ; ( "tree_nodes_at_level" ,
-       proj { function_name = "treeNodesAtLevel" ; k_max = 20 ; d_in =
-       Denotation.args2 Denotation.int (Denotation.tree Denotation.bool) ; d_out
-       = Denotation.int ; 
-       func = let f : int * bool Tree2.t -> int = fun (level, tree) ->
-       Tree2.count_nodes_at_level level tree in f } ) ; ( "tree_postorder" ,
-       proj { function_name = "treePostorder" ; k_max = 20 ; d_in =
-       Denotation.tree Denotation.int ; d_out = Denotation.list Denotation.int ;
-        func = let f : int Tree2.t -> int list = fun
-       tree -> Tree2.post_order tree in f } ) ; ( "tree_preorder" , proj {
-       function_name = "treePreorder" ; k_max = 15 ; d_in = Denotation.tree
-       Denotation.int ; d_out = Denotation.list Denotation.int ; input =
-       Sample2.nat_tree ; func = let f : int Tree2.t -> int list = fun tree ->
-       Tree2.pre_order tree in f } ) *);
   ]

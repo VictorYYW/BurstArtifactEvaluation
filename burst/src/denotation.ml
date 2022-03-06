@@ -44,11 +44,13 @@ let rec nested_list : 'a expr_t -> 'a list list expr_t = fun d -> function
   | x::xs -> 
     Expr.mk_ctor (Id.create "LCons") (Expr.mk_tuple [list d x; nested_list d xs])
 
-(* let tree : 'a t -> 'a Tree2.t t = fun (da, typ) -> ( let rec helper t = match
-   t with | Tree2.Leaf -> ECtor ("Leaf", [typ], ETuple [])
+let tree : 'a expr_t -> 'a Tree2.t expr_t = fun (da) ->
+  ( let rec helper t = match t with
+        | Tree2.Leaf -> Expr.mk_ctor (Id.create "Leaf") (Expr.mk_unit)
 
-   | Tree2.Node (left, x, right) -> ECtor ( "Node" , [typ] , ETuple [ helper
-   left ; da x ; helper right ] ) in helper , TData ("Tree", [typ]) ) *)
+        | Tree2.Node (left, x, right) ->
+    Expr.mk_ctor (Id.create "Node") (Expr.mk_tuple [helper left; da x; helper right])
+    in helper )
 
 let arg1 : 'a expr_t -> 'a t =
   fun da a -> [da a]

@@ -101,6 +101,10 @@ exp:
     {
       mk_ctor_by_name c Expr.mk_unit
     }
+  | c=UID LPAREN RPAREN
+    {
+      mk_ctor_by_name c Expr.mk_unit
+    }
   | c=UID e=exp
                      { mk_ctor_by_name c e }
   | c=UID LPAREN e=exp COMMA es=exp_comma_list_one RPAREN (* Sugar: ctor with tuple argument.  *)

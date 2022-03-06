@@ -9,7 +9,7 @@ CREATE_DEFAULT_ANSWERS := python3 create-default-answers.py
 all: build link
 
 build:
-	dune build app/BurstCmdLine.exe --profile release # ignores warnings as errors
+	dune build @fmt app/BurstCmdLine.exe --profile release # ignores warnings as errors
 
 link: $(TARGETS)
 

@@ -1,6 +1,6 @@
 type bool =
-  | True
-  | False
+  | T
+  | F
 
 type tree =
   | Leaf
@@ -22,5 +22,5 @@ let append =
 synth tree -> list satisfying
 
 [Leaf] -> Nil,
-[Node (Node (Leaf, True, Leaf), False, Leaf)] -> Cons(True, Cons(False, Nil)),
-[Node (Leaf, False, Node (Leaf, True, Leaf))] -> Cons(False, Cons(True, Nil)),
+[Node (Node (Leaf, T, Leaf), F, Leaf)] -> Cons(T, Cons(F, Nil)),
+[Node (Leaf, F, Node (Leaf, T, Leaf))] -> Cons(F, Cons(T, Nil)),
