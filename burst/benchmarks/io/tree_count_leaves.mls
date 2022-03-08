@@ -1,6 +1,6 @@
 type bool =
-  | True
-  | False
+  | T
+  | F
 
 type tree =
   | Leaf
@@ -22,5 +22,5 @@ let sum =
 synth tree -> nat satisfying
 
 [Leaf] -> 1,
-[Node (Node (Leaf, True, Leaf), True, Leaf)] -> 3,
-[Node (Node (Leaf, True, Leaf), True, Node (Leaf, True, Leaf))] -> 4,
+[Node (Node (Leaf, T, Leaf), T, Leaf)] -> 3,
+[Node (Node (Leaf, T, Leaf), T, Node (Leaf, T, Leaf))] -> 4,
