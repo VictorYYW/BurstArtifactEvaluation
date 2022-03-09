@@ -2364,7 +2364,7 @@ let all : 'a reference_projection -> (string * 'a) list =
                 2 );
             ];
           func = let f : bool Tree2.t * int -> int =
-                   fun (tree) -> Tree2.count_nodes_at_level level tree in f
+                   fun (tree, level) -> Tree2.count_nodes_at_level level tree in f
         } ) ;
     ( "tree_postorder" ,
       proj
