@@ -2128,22 +2128,21 @@ let all : 'a reference_projection -> (string * 'a) list =
         {
           function_name = "tree_nodes_at_level" ;
           k_max = 20 ;
-          d_in = Denotation.args2 Denotation.int (Denotation.tree Denotation.bool) ;
+          d_in = Denotation.args2 (Denotation.tree Denotation.bool) Denotation.int ;
           d_out = Denotation.int ; 
           expert = [];
           assertion =
             [
-              ((0, Leaf), 0);
-              ( ( 1,
-                  Node
+              ( ( Node
                     ( Leaf,
                       true,
                       Node
                         (Leaf, false, Node (Node (Leaf, true, Leaf), true, Leaf))
-                    ) ),
+                    ),
+                  1 ),
                 1 );
-              ( ( 1,
-                  Node
+              ((Leaf, 0), 0);
+              ( ( Node
                     ( Node
                         ( Leaf,
                           false,
@@ -2155,19 +2154,19 @@ let all : 'a reference_projection -> (string * 'a) list =
                               false,
                               Leaf ) ),
                       false,
-                      Leaf ) ),
+                      Leaf ),
+                  1 ),
                 1 );
-              ( ( 0,
-                  Node
+              ( ( Node
                     ( Leaf,
                       false,
                       Node
                         ( Node (Leaf, false, Leaf),
                           true,
-                          Node (Leaf, false, Leaf) ) ) ),
+                          Node (Leaf, false, Leaf) ) ),
+                  0 ),
                 1 );
-              ( ( 3,
-                  Node
+              ( ( Node
                     ( Leaf,
                       true,
                       Node
@@ -2176,10 +2175,10 @@ let all : 'a reference_projection -> (string * 'a) list =
                               false,
                               Node (Leaf, false, Leaf) ),
                           true,
-                          Leaf ) ) ),
+                          Leaf ) ),
+                  3 ),
                 2 );
-              ( ( 1,
-                  Node
+              ( ( Node
                     ( Leaf,
                       false,
                       Node
@@ -2188,10 +2187,10 @@ let all : 'a reference_projection -> (string * 'a) list =
                               false,
                               Node (Leaf, true, Leaf) ),
                           true,
-                          Node (Leaf, false, Leaf) ) ) ),
+                          Node (Leaf, false, Leaf) ) ),
+                  1 ),
                 1 );
-              ( ( 2,
-                  Node
+              ( ( Node
                     ( Leaf,
                       true,
                       Node
@@ -2200,10 +2199,10 @@ let all : 'a reference_projection -> (string * 'a) list =
                               true,
                               Node (Leaf, true, Leaf) ),
                           true,
-                          Node (Leaf, false, Leaf) ) ) ),
+                          Node (Leaf, false, Leaf) ) ),
+                  2 ),
                 2 );
-              ( ( 2,
-                  Node
+              ( ( Node
                     ( Leaf,
                       true,
                       Node
@@ -2216,10 +2215,10 @@ let all : 'a reference_projection -> (string * 'a) list =
                               false,
                               Leaf ),
                           false,
-                          Leaf ) ) ),
+                          Leaf ) ),
+                  2 ),
                 1 );
-              ( ( 2,
-                  Node
+              ( ( Node
                     ( Leaf,
                       false,
                       Node
@@ -2231,10 +2230,10 @@ let all : 'a reference_projection -> (string * 'a) list =
                               true,
                               Leaf ),
                           true,
-                          Leaf ) ) ),
+                          Leaf ) ),
+                  2 ),
                 1 );
-              ( ( 1,
-                  Node
+              ( ( Node
                     ( Leaf,
                       false,
                       Node
@@ -2246,10 +2245,10 @@ let all : 'a reference_projection -> (string * 'a) list =
                                   false,
                                   Node (Leaf, false, Leaf) ) ),
                           true,
-                          Leaf ) ) ),
+                          Leaf ) ),
+                  1 ),
                 1 );
-              ( ( 1,
-                  Node
+              ( ( Node
                     ( Node
                         ( Leaf,
                           false,
@@ -2261,19 +2260,19 @@ let all : 'a reference_projection -> (string * 'a) list =
                               true,
                               Leaf ) ),
                       true,
-                      Leaf ) ),
+                      Leaf ),
+                  1 ),
                 1 );
-              ( ( 0,
-                  Node
+              ( ( Node
                     ( Node
                         ( Node (Node (Leaf, false, Leaf), false, Leaf),
                           false,
                           Leaf ),
                       false,
-                      Node (Node (Leaf, false, Leaf), false, Leaf) ) ),
+                      Node (Node (Leaf, false, Leaf), false, Leaf) ),
+                  0 ),
                 1 );
-              ( ( 2,
-                  Node
+              ( ( Node
                     ( Leaf,
                       false,
                       Node
@@ -2282,10 +2281,10 @@ let all : 'a reference_projection -> (string * 'a) list =
                               true,
                               Node (Leaf, false, Node (Leaf, false, Leaf)) ),
                           false,
-                          Leaf ) ) ),
+                          Leaf ) ),
+                  2 ),
                 1 );
-              ( ( 0,
-                  Node
+              ( ( Node
                     ( Leaf,
                       true,
                       Node
@@ -2297,17 +2296,17 @@ let all : 'a reference_projection -> (string * 'a) list =
                               Node
                                 ( Node (Node (Leaf, true, Leaf), false, Leaf),
                                   true,
-                                  Leaf ) ) ) ) ),
+                                  Leaf ) ) ) ),
+                  0 ),
                 1 );
-              ( ( 0,
-                  Node
+              ( ( Node
                     ( Node
                         (Node (Node (Leaf, true, Leaf), false, Leaf), true, Leaf),
                       true,
-                      Leaf ) ),
+                      Leaf ),
+                  0 ),
                 1 );
-              ( ( 2,
-                  Node
+              ( ( Node
                     ( Node
                         ( Leaf,
                           true,
@@ -2316,10 +2315,10 @@ let all : 'a reference_projection -> (string * 'a) list =
                               true,
                               Node (Leaf, false, Node (Leaf, true, Leaf)) ) ),
                       true,
-                      Node (Leaf, false, Leaf) ) ),
+                      Node (Leaf, false, Leaf) ),
+                  2 ),
                 1 );
-              ( ( 1,
-                  Node
+              ( ( Node
                     ( Node
                         ( Leaf,
                           false,
@@ -2328,10 +2327,10 @@ let all : 'a reference_projection -> (string * 'a) list =
                               false,
                               Node (Leaf, true, Leaf) ) ),
                       true,
-                      Leaf ) ),
+                      Leaf ),
+                  1 ),
                 1 );
-              ( ( 0,
-                  Node
+              ( ( Node
                     ( Leaf,
                       false,
                       Node
@@ -2340,10 +2339,10 @@ let all : 'a reference_projection -> (string * 'a) list =
                               false,
                               Node (Leaf, true, Node (Leaf, true, Leaf)) ),
                           false,
-                          Leaf ) ) ),
+                          Leaf ) ),
+                  0 ),
                 1 );
-              ( ( 1,
-                  Node
+              ( ( Node
                     ( Leaf,
                       true,
                       Node
@@ -2352,19 +2351,20 @@ let all : 'a reference_projection -> (string * 'a) list =
                               true,
                               Node (Leaf, false, Leaf) ),
                           true,
-                          Leaf ) ) ),
+                          Leaf ) ),
+                  1 ),
                 1 );
-              ( ( 2,
-                  Node
+              ( ( Node
                     ( Node (Leaf, true, Node (Leaf, true, Leaf)),
                       false,
                       Node
                         (Node (Leaf, true, Node (Leaf, true, Leaf)), true, Leaf)
-                    ) ),
+                    ),
+                  2 ),
                 2 );
             ];
-          func = let f : int * bool Tree2.t -> int =
-                   fun (level, tree) -> Tree2.count_nodes_at_level level tree in f
+          func = let f : bool Tree2.t * int -> int =
+                   fun (tree) -> Tree2.count_nodes_at_level level tree in f
         } ) ;
     ( "tree_postorder" ,
       proj
