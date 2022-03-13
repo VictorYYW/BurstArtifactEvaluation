@@ -1,7 +1,7 @@
-include "nat.decls"
+include "benchmarks/io/nat.decls"
 
 synth nat -> bool satisfying
 
-[0] -> True,
-[2] -> True,
-[3] -> False
+[0] -> T,
+[2] -> T,
+[3] -> F

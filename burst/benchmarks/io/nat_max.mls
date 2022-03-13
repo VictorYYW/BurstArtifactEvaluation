@@ -1,5 +1,5 @@
-include "nat.decls"
-include "compare.decls"
+include "benchmarks/io/nat.decls"
+include "benchmarks/io/compare.decls"
 
 synth nat -> nat -> nat satisfying
 

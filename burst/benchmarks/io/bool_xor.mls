@@ -1,8 +1,8 @@
-include "bool.decls"
+include "benchmarks/io/bool.decls"
 
 synth bool -> bool -> bool satisfying
 
-[True,True] -> False,
-[True,False] -> True,
-[False,True] -> True,
-[False,False] -> False
+[T,T] -> F,
+[T,F] -> T,
+[F,T] -> T,
+[F,F] -> F

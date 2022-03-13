@@ -1,4 +1,4 @@
-include "nat.decls"
+include "benchmarks/io/nat.decls"
 
 synth nat -> nat satisfying
 

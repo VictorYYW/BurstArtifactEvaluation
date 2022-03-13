@@ -3,5 +3,5 @@ type nat =
   | S of nat
 
 type bool =
-  | True
-  | False
+  | T
+  | F

@@ -1,3 +1,3 @@
 type bool =
-  | False
-  | True
+  | F
+  | T
