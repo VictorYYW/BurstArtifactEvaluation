@@ -1140,10 +1140,10 @@ let all : 'a reference_projection -> (string * 'a) list =
              f);
           
         } );
-    ( "tree_collect_leaves",
+    ( "tree_inorder_bool",
       proj
         {
-          function_name = "treeCollectLeaves";
+          function_name = "tree_inorder_bool";
           k_max = 20;
           d_in = Denotation.arg1 (Denotation.tree Denotation.bool);
           d_out = Denotation.list Denotation.bool;
